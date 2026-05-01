@@ -81,10 +81,12 @@ using a Lemonade OpenAI-compatible server. This layer reads only deterministic
 study outputs and writes agent reports under the latest study's `agents/`
 folder plus SQLite metadata in `data/processed/continuity_break_detector.sqlite`.
 
-## Phase 5 planned advanced forecasters
+## Phase 5 advanced forecasters
 
-Phase 5 will add optional TimesFM and Chronos adapters. They are not required for
-the current deterministic baseline pipeline.
+Phase 5 adds optional TimesFM and Chronos adapters for advanced backtests. They
+are not required for the deterministic baseline pipeline, and the advanced
+backtest continues with available models if either optional adapter is missing or
+cannot forecast with the local checkout.
 
 Local checkout paths can be configured with:
 
@@ -101,13 +103,13 @@ Defaults:
 - `CBD_TIMESFM_LOCAL_PATH=~/Projets/timesfm`
 - `CBD_CHRONOS_LOCAL_PATH=~/Projets/chronos-forecasting`
 
-Planned detection order for each optional forecaster:
+Detection order for each optional forecaster:
 
 1. installed import from the current Python environment
 2. local checkout path from the environment variable
 3. default local checkout path
 
-If a local checkout exists, Phase 5 adapters will add candidate source paths to
+If a local checkout exists, Phase 5 adapters add candidate source paths to
 `sys.path` only inside adapter loading code. The project will not vendor, copy,
 commit, or modify the TimesFM or Chronos repositories. If either optional model
 is unavailable, the advanced backtest will report the reason and continue with

@@ -1,8 +1,16 @@
 from __future__ import annotations
 
+import logging
+from collections.abc import Sequence
+
 import numpy as np
 import pandas as pd
 
+from continuity_break_detector.forecasting.base import ForecasterAdapter, ForecastingError
+from continuity_break_detector.forecasting.registry import deterministic_forecaster_ids
+
+
+logger = logging.getLogger(__name__)
 
 FORECAST_ERROR_COLUMNS = [
     "source_id",
@@ -26,11 +34,13 @@ def backtest_metric(
     train_window_years: int = 20,
     forecast_horizon_years: int = 5,
     minimum_series_length: int = 30,
+    forecasters: Sequence[ForecasterAdapter] | None = None,
 ) -> pd.DataFrame:
     rows: list[dict[str, object]] = []
     if df.empty:
         return pd.DataFrame(columns=FORECAST_ERROR_COLUMNS)
 
+    disabled_forecasters: set[str] = set()
     group_columns = ["source_id", "metric", "entity"]
     for (_source_id, _metric, _entity), group in df.groupby(group_columns, dropna=False):
         series = (
@@ -65,7 +75,17 @@ def backtest_metric(
             if not target_years:
                 continue
             train_values = np.array([values_by_year[year] for year in train_years], dtype=float)
-            predictions_by_model = _predict_all_models(train_years, train_values, target_years)
+            if forecasters is None:
+                predictions_by_model = _predict_all_models(train_years, train_values, target_years)
+            else:
+                train_series = pd.Series(train_values, index=train_years, dtype=float)
+                predictions_by_model = _predict_forecasters(
+                    forecasters,
+                    train_series,
+                    target_years,
+                    forecast_horizon_years,
+                    disabled_forecasters,
+                )
             for model_name, predictions in predictions_by_model.items():
                 for target_year in target_years:
                     if target_year not in predictions:
@@ -85,6 +105,38 @@ def backtest_metric(
                         )
                     )
     return pd.DataFrame(rows, columns=FORECAST_ERROR_COLUMNS)
+
+
+def _predict_forecasters(
+    forecasters: Sequence[ForecasterAdapter],
+    train_series: pd.Series,
+    target_years: list[int],
+    horizon: int,
+    disabled_forecasters: set[str],
+) -> dict[str, dict[int, float]]:
+    predictions: dict[str, dict[int, float]] = {}
+    forecast_years = list(range(int(train_series.index[-1]) + 1, int(train_series.index[-1]) + horizon + 1))
+    for forecaster in forecasters:
+        if forecaster.forecaster_id in disabled_forecasters:
+            continue
+        try:
+            values = forecaster.forecast(train_series, horizon)
+        except ForecastingError as exc:
+            if forecaster.forecaster_id in deterministic_forecaster_ids():
+                continue
+            logger.warning(
+                "Disabling forecaster %s after forecast failure: %s",
+                forecaster.forecaster_id,
+                exc,
+            )
+            disabled_forecasters.add(forecaster.forecaster_id)
+            continue
+        predictions[forecaster.forecaster_id] = {
+            year: float(value)
+            for year, value in zip(forecast_years, values, strict=False)
+            if year in target_years
+        }
+    return predictions
 
 
 def _predict_all_models(

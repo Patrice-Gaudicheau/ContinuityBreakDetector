@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 
 from continuity_break_detector.backtesting.runner import main as backtesting_main
+from continuity_break_detector.backtesting.ranking_runner import main as ranking_main
 from continuity_break_detector.ingestion.runner import main as ingestion_main
 from continuity_break_detector.normalization.runner import main as normalization_main
 from continuity_break_detector.statistics.runner import main as statistics_main
@@ -21,7 +22,10 @@ def main() -> int:
     if len(sys.argv) >= 2 and sys.argv[1] == "backtest":
         sys.argv = [sys.argv[0], *sys.argv[2:]]
         return backtesting_main()
-    print("Usage: python main.py {ingest,normalize,compute_statistics,backtest}")
+    if len(sys.argv) >= 2 and sys.argv[1] == "rank_breaks":
+        sys.argv = [sys.argv[0], *sys.argv[2:]]
+        return ranking_main()
+    print("Usage: python main.py {ingest,normalize,compute_statistics,backtest,rank_breaks}")
     return 2
 
 

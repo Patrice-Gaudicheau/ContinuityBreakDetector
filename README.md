@@ -45,6 +45,7 @@ Run normalization and statistics:
 python main.py normalize
 python main.py compute_statistics
 python main.py backtest
+python main.py rank_breaks
 ```
 
 Normalized outputs are written to
@@ -62,6 +63,9 @@ Backtesting studies are written under
 `studies/backtests/{YYYYMMDD_HHMMSS}_rapid_influx_v1/`. They use deterministic
 baseline forecasts only: last value, linear trend, and positive-only
 exponential trend.
+
+Ranked break candidates are appended to the latest study folder by
+`python main.py rank_breaks`.
 
 Optional environment variables:
 

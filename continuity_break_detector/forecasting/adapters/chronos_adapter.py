@@ -1,91 +1,97 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any
+import os
+from dataclasses import dataclass, field
 
-import numpy as np
 import pandas as pd
 
-from continuity_break_detector.forecasting.availability import (
-    DEFAULT_CHRONOS_LOCAL_PATH,
-    ImportAttempt,
-    import_with_local_fallback,
-)
-from continuity_break_detector.forecasting.base import (
-    ForecasterAvailability,
-    ForecastingError,
-    ensure_forecast_length,
+from continuity_break_detector.forecasting.base import ForecasterAvailability, ForecastingError
+from continuity_break_detector.forecasting.subprocess_client import (
+    chronos_python,
+    chronos_worker_path,
+    run_worker_forecast,
+    smoke_test_worker,
+    timeout_seconds,
 )
 
 
 @dataclass
 class ChronosAdapter:
-    model: Any | None = None
-
     forecaster_id: str = "chronos"
     display_name: str = "Chronos"
+    _availability: ForecasterAvailability | None = field(default=None, init=False, repr=False)
+    _forecast_count: int = field(default=0, init=False, repr=False)
 
     def availability(self) -> ForecasterAvailability:
-        attempt = load_chronos_module()
-        available = attempt.available
-        reason = attempt.reason
-        if attempt.available and attempt.module is not None:
-            api_available = hasattr(attempt.module, "forecast") or hasattr(attempt.module, "predict")
-            available = api_available
-            if api_available:
-                reason = f"{attempt.reason}; supported forecast API detected"
-            else:
-                reason = f"{attempt.reason}; no supported forecast API exposed"
-        return ForecasterAvailability(
+        if self._availability is not None:
+            return self._availability
+        python_executable = chronos_python()
+        worker_path = chronos_worker_path()
+        if not python_executable.exists():
+            self._availability = ForecasterAvailability(
+                self.forecaster_id,
+                self.display_name,
+                False,
+                f"subprocess Python executable does not exist: {python_executable}",
+                str(python_executable),
+            )
+            return self._availability
+        if not worker_path.exists():
+            self._availability = ForecasterAvailability(
+                self.forecaster_id,
+                self.display_name,
+                False,
+                f"worker script does not exist: {worker_path}",
+                str(python_executable),
+            )
+            return self._availability
+        available, reason = smoke_test_worker(
+            python_executable=python_executable,
+            worker_path=worker_path,
+            model=self.forecaster_id,
+            params=_chronos_params(),
+        )
+        self._availability = ForecasterAvailability(
             self.forecaster_id,
             self.display_name,
             available,
-            reason,
-            attempt.source_path,
+            f"subprocess: {reason}",
+            str(python_executable),
         )
+        return self._availability
 
     def forecast(self, series: pd.Series, horizon: int) -> list[float]:
+        _enforce_optional_forecast_limit(self.forecaster_id, self._forecast_count)
         values = series.astype(float).to_numpy(copy=True)
         if len(values) == 0:
             raise ForecastingError("chronos received an empty series")
-        model = self.model or _load_forecast_object()
-        forecast_method = getattr(model, "forecast", None) or getattr(model, "predict", None)
-        if forecast_method is None:
-            raise ForecastingError("Chronos object does not expose forecast(...) or predict(...)")
-        try:
-            raw = forecast_method(values, horizon=horizon)
-        except TypeError:
-            raw = forecast_method(values, prediction_length=horizon)
-        predictions = _coerce_chronos_output(raw, horizon)
-        return ensure_forecast_length(predictions, horizon=horizon, forecaster_id=self.forecaster_id)
+        result = run_worker_forecast(
+            python_executable=chronos_python(),
+            worker_path=chronos_worker_path(),
+            model=self.forecaster_id,
+            series=[float(value) for value in values.tolist()],
+            horizon=horizon,
+            params=_chronos_params(),
+            timeout=timeout_seconds(),
+        )
+        self._forecast_count += 1
+        return result.forecast
 
 
-def load_chronos_module() -> ImportAttempt:
-    return import_with_local_fallback(
-        "chronos",
-        env_var="CBD_CHRONOS_LOCAL_PATH",
-        default_root=DEFAULT_CHRONOS_LOCAL_PATH,
-        candidate_relative_paths=["src", "."],
-    )
+def _chronos_params() -> dict[str, object]:
+    return {
+        "model_id": "amazon/chronos-bolt-small",
+        "device_map": "cpu",
+        "local_files_only": True,
+        "frequency": "yearly",
+    }
 
 
-def _load_forecast_object() -> Any:
-    attempt = load_chronos_module()
-    if not attempt.available or attempt.module is None:
-        raise ForecastingError(f"Chronos unavailable: {attempt.reason}")
-    if hasattr(attempt.module, "forecast") or hasattr(attempt.module, "predict"):
-        return attempt.module
-    raise ForecastingError("Chronos module imported but no supported minimal forecast API was found")
+def _enforce_optional_forecast_limit(forecaster_id: str, completed_count: int) -> None:
+    raw_limit = os.environ.get("CBD_OPTIONAL_FORECAST_LIMIT")
+    if not raw_limit:
+        return
+    limit = int(raw_limit)
+    if completed_count >= limit:
+        raise ForecastingError(f"{forecaster_id} optional forecast limit reached: {limit}")
 
-
-def _coerce_chronos_output(raw: Any, horizon: int) -> list[float]:
-    if isinstance(raw, tuple):
-        raw = raw[0]
-    array = np.asarray(raw, dtype=float)
-    if array.ndim == 0:
-        raise ForecastingError("Chronos returned a scalar forecast")
-    if array.ndim == 1:
-        values = array[:horizon]
-    else:
-        values = array.reshape(-1, array.shape[-1])[0, :horizon]
-    return [float(value) for value in values.tolist()]

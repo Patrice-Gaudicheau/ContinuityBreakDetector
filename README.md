@@ -88,11 +88,11 @@ are not required for the deterministic baseline pipeline, and the advanced
 backtest continues with available models if either optional adapter is missing or
 cannot forecast with the local checkout.
 
-Local checkout paths can be configured with:
+Local forecaster Python executables can be configured with:
 
 ```bash
-export CBD_TIMESFM_LOCAL_PATH="$HOME/Projets/timesfm"
-export CBD_CHRONOS_LOCAL_PATH="$HOME/Projets/chronos-forecasting"
+export CBD_TIMESFM_PYTHON="$HOME/Projets/timesfm/.venv/bin/python"
+export CBD_CHRONOS_PYTHON="$HOME/Projets/chronos-forecasting/.venv/bin/python"
 
 python main.py list_forecasters
 python main.py backtest_advanced
@@ -100,20 +100,23 @@ python main.py backtest_advanced
 
 Defaults:
 
-- `CBD_TIMESFM_LOCAL_PATH=~/Projets/timesfm`
-- `CBD_CHRONOS_LOCAL_PATH=~/Projets/chronos-forecasting`
+- `CBD_TIMESFM_PYTHON=<TIMESFM_CHECKOUT>/.venv/bin/python`
+- `CBD_CHRONOS_PYTHON=<CHRONOS_CHECKOUT>/.venv/bin/python`
+- `CBD_FORECASTER_TIMEOUT_SECONDS=300`
 
-Detection order for each optional forecaster:
+Availability checks for each optional forecaster:
 
-1. installed import from the current Python environment
-2. local checkout path from the environment variable
-3. default local checkout path
+1. configured Python executable exists
+2. worker script exists
+3. smoke forecast succeeds for a short yearly series
 
-If a local checkout exists, Phase 5 adapters add candidate source paths to
-`sys.path` only inside adapter loading code. The project will not vendor, copy,
-commit, or modify the TimesFM or Chronos repositories. If either optional model
-is unavailable, the advanced backtest will report the reason and continue with
-available models; deterministic baselines will still run.
+TimesFM and Chronos run through subprocess workers so their heavy dependencies
+do not need to be installed into the CBD environment. The project does not
+vendor, copy, commit, or modify the TimesFM or Chronos repositories. If either
+optional model is unavailable, the advanced backtest reports the reason and
+continues with available models; deterministic baselines still run. For bounded
+smoke runs of `backtest_advanced`, `CBD_OPTIONAL_FORECAST_LIMIT` can cap the
+number of optional model forecasts before deterministic fallback continues.
 
 Optional environment variables:
 

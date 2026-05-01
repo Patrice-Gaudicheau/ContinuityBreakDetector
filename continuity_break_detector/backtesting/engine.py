@@ -35,12 +35,13 @@ def backtest_metric(
     forecast_horizon_years: int = 5,
     minimum_series_length: int = 30,
     forecasters: Sequence[ForecasterAdapter] | None = None,
+    disabled_forecasters: set[str] | None = None,
 ) -> pd.DataFrame:
     rows: list[dict[str, object]] = []
     if df.empty:
         return pd.DataFrame(columns=FORECAST_ERROR_COLUMNS)
 
-    disabled_forecasters: set[str] = set()
+    disabled = disabled_forecasters if disabled_forecasters is not None else set()
     group_columns = ["source_id", "metric", "entity"]
     for (_source_id, _metric, _entity), group in df.groupby(group_columns, dropna=False):
         series = (
@@ -84,7 +85,7 @@ def backtest_metric(
                     train_series,
                     target_years,
                     forecast_horizon_years,
-                    disabled_forecasters,
+                    disabled,
                 )
             for model_name, predictions in predictions_by_model.items():
                 for target_year in target_years:

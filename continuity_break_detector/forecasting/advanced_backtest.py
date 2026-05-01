@@ -64,6 +64,7 @@ def run_advanced_backtest_study(
 
     metric_frames: list[pd.DataFrame] = []
     metrics_processed = 0
+    disabled_forecasters: set[str] = set()
     for path in normalized_metric_paths(input_dir):
         normalized = read_parquet(path)
         errors = backtest_metric(
@@ -72,6 +73,7 @@ def run_advanced_backtest_study(
             forecast_horizon_years=params.forecast_horizon_years,
             minimum_series_length=params.minimum_series_length,
             forecasters=forecasters,
+            disabled_forecasters=disabled_forecasters,
         )
         if not errors.empty:
             metric_frames.append(errors)
@@ -119,6 +121,7 @@ def run_advanced_backtest_study(
         parameters=params,
     )
     provenance["forecaster_availability"] = [availability_record(item) for item in availability]
+    provenance["forecaster_execution"] = forecaster_execution(availability)
     provenance["models_run"] = models_run
     write_json(output_dir / "provenance.json", provenance)
     (output_dir / "study.md").write_text(
@@ -194,6 +197,7 @@ def build_advanced_summary(
         "input_path": str(input_dir),
         "models": models_run,
         "forecaster_availability": [availability_record(item) for item in availability],
+        "forecaster_execution": forecaster_execution(availability),
         "parameters": parameters.to_dict(),
         "metrics_processed": metrics_processed,
         "forecast_error_rows": forecast_error_rows,
@@ -279,6 +283,20 @@ def availability_record(availability: ForecasterAvailability) -> dict[str, Any]:
     }
 
 
+def forecaster_execution(availability: list[ForecasterAvailability]) -> dict[str, Any]:
+    records: dict[str, Any] = {}
+    for status in availability:
+        if status.forecaster_id not in {"timesfm", "chronos"}:
+            continue
+        records[status.forecaster_id] = {
+            "mode": "subprocess",
+            "python": status.source_path,
+            "available": status.available,
+            "reason": status.reason,
+        }
+    return records
+
+
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(_json_safe(payload), indent=2, ensure_ascii=False), encoding="utf-8")
 
@@ -291,4 +309,3 @@ def _json_safe(value: Any) -> Any:
     if isinstance(value, np.generic):
         return value.item()
     return value
-

@@ -105,7 +105,7 @@ class LemonadeClient:
                 {"role": "user", "content": user_prompt},
             ],
             "temperature": 0,
-            "max_tokens": 800,
+            "max_tokens": 1200,
         }
         if include_chat_template_kwargs:
             payload["chat_template_kwargs"] = {"enable_thinking": False}

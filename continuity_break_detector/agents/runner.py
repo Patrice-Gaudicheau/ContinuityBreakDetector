@@ -23,10 +23,10 @@ from continuity_break_detector.utils.paths import ensure_directory
 
 
 REQUIRED_INPUT_FILES = [
+    "data_artifact_audit.json",
+    "data_artifact_audit.md",
     "candidate_audit.json",
-    "candidate_audit.md",
     "ranked_break_candidates.json",
-    "top_break_candidates.md",
     "summary.json",
     "provenance.json",
 ]
@@ -180,6 +180,8 @@ def compact_file_content(filename: str, content: str) -> str:
         return _compact_ranked_json(content)
     if filename == "candidate_audit.json":
         return _compact_audit_json(content)
+    if filename == "data_artifact_audit.json":
+        return _compact_artifact_json(content)
     if filename == "provenance.json":
         return _compact_json(content, keep_top_items=5)
     return content[:12000]
@@ -305,6 +307,54 @@ def _compact_audit_json(content: str) -> str:
                 ],
             )
             for item in payload.get(list_name, [])[:5]
+            if isinstance(item, dict)
+        ]
+    return json.dumps(compacted, indent=2, ensure_ascii=False)
+
+
+def _compact_artifact_json(content: str) -> str:
+    payload = _load_json_object(content)
+    if payload is None:
+        return content[:8000]
+    compacted = {
+        key: payload.get(key)
+        for key in [
+            "study_id",
+            "created_at",
+            "source_study_path",
+            "artifact_parameters",
+            "candidate_count",
+            "verdict_counts",
+        ]
+    }
+    for list_name in [
+        "likely_data_artifacts",
+        "possible_data_artifacts",
+        "low_artifact_risk_candidates",
+    ]:
+        compacted[list_name] = [
+            _select_fields(
+                item,
+                [
+                    "target_year",
+                    "rank_score",
+                    "robustness_score",
+                    "artifact_score",
+                    "artifact_verdict",
+                    "single_source_dominance",
+                    "dominant_source_id",
+                    "dominant_source_share",
+                    "extreme_z_score_risk",
+                    "historical_coverage_risk",
+                    "revision_artifact_hint",
+                    "model_echo_risk",
+                    "echo_neighbor_years",
+                    "known_real_world_event",
+                    "ordinary_explanation_hint",
+                    "notes",
+                ],
+            )
+            for item in payload.get(list_name, [])[:8]
             if isinstance(item, dict)
         ]
     return json.dumps(compacted, indent=2, ensure_ascii=False)

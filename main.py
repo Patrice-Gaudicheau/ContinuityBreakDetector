@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 
+from continuity_break_detector.agents.runner import main as agents_main
 from continuity_break_detector.backtesting.audit_runner import main as audit_main
 from continuity_break_detector.backtesting.runner import main as backtesting_main
 from continuity_break_detector.backtesting.ranking_runner import main as ranking_main
@@ -29,7 +30,10 @@ def main() -> int:
     if len(sys.argv) >= 2 and sys.argv[1] == "audit_candidates":
         sys.argv = [sys.argv[0], *sys.argv[2:]]
         return audit_main()
-    print("Usage: python main.py {ingest,normalize,compute_statistics,backtest,rank_breaks,audit_candidates}")
+    if len(sys.argv) >= 2 and sys.argv[1] == "analyze_agents":
+        sys.argv = [sys.argv[0], *sys.argv[2:]]
+        return agents_main()
+    print("Usage: python main.py {ingest,normalize,compute_statistics,backtest,rank_breaks,audit_candidates,analyze_agents}")
     return 2
 
 

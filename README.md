@@ -1,8 +1,8 @@
 # ContinuityBreakDetector
 
-This repository currently implements only the raw source retrieval layer. It does
-not include anomaly detection, LLM processing, interpretation, scoring,
-dashboards, normalization, or analysis.
+This repository currently implements raw source retrieval plus deterministic
+normalization and statistics. It does not include anomaly detection, LLM
+processing, interpretation, scoring, dashboards, or agent workflows.
 
 ## Implemented sources
 
@@ -22,6 +22,40 @@ Run ingestion:
 python -m continuity_break_detector.ingestion.runner
 python main.py ingest
 ```
+
+## Phase 2 deterministic processing
+
+Normalization reads raw Phase 1 files from `data/raw/` and writes yearly time
+series with this schema:
+
+```json
+{
+  "source_id": "string",
+  "metric": "string",
+  "year": 2020,
+  "value": 1.0,
+  "unit": null,
+  "entity": null
+}
+```
+
+Run normalization and statistics:
+
+```bash
+python main.py normalize
+python main.py compute_statistics
+```
+
+Normalized outputs are written to
+`data/processed/normalized/{source_id}/{metric}.parquet`.
+
+Statistics outputs are written to
+`data/processed/statistics/{source_id}/{metric}_statistics.parquet`.
+
+The statistics layer is deterministic only. It computes growth rate, log growth,
+acceleration, rolling z-score, rolling mean deviation, and conservative rolling
+mean structural-break candidate scores. It does not perform interpretation,
+scoring, dashboarding, LLM calls, or anomaly detection.
 
 Optional environment variables:
 
@@ -46,4 +80,3 @@ are intentionally placeholders for later work:
 
 Crossref cursor pagination is also intentionally deferred for the POC; the
 current connector fetches the first filtered page only.
-

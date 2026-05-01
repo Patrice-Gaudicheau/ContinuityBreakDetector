@@ -44,6 +44,7 @@ Run normalization and statistics:
 ```bash
 python main.py normalize
 python main.py compute_statistics
+python main.py backtest
 ```
 
 Normalized outputs are written to
@@ -56,6 +57,11 @@ The statistics layer is deterministic only. It computes growth rate, log growth,
 acceleration, rolling z-score, rolling mean deviation, and conservative rolling
 mean structural-break candidate scores. It does not perform interpretation,
 scoring, dashboarding, LLM calls, or anomaly detection.
+
+Backtesting studies are written under
+`studies/backtests/{YYYYMMDD_HHMMSS}_rapid_influx_v1/`. They use deterministic
+baseline forecasts only: last value, linear trend, and positive-only
+exponential trend.
 
 Optional environment variables:
 

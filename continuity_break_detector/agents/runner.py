@@ -118,7 +118,7 @@ def analyze_study(
                 report_text=report_text,
                 confidence_level=extract_confidence_level(report_text),
             )
-            reports[agent_name] = report_text
+            reports[agent_name] = summarize_report_for_synthesis(report_text)
             completed += 1
         write_agent_run_json(
             output_dir / "agent_run.json",
@@ -162,10 +162,180 @@ def load_study_content(study_path: Path) -> dict[str, str]:
 
 
 def format_study_content(payloads: dict[str, str]) -> str:
-    sections: list[str] = []
+    sections: list[str] = [
+        "The following are deterministic excerpts from the required study files. "
+        "Use only this provided content; do not infer unseen values."
+    ]
     for filename in REQUIRED_INPUT_FILES:
-        sections.append(f"## {filename}\n{payloads[filename]}")
+        sections.append(f"## {filename}\n{compact_file_content(filename, payloads[filename])}")
     return "\n\n".join(sections)
+
+
+def compact_file_content(filename: str, content: str) -> str:
+    if filename.endswith(".md"):
+        return content[:3000]
+    if filename == "summary.json":
+        return _compact_summary_json(content)
+    if filename == "ranked_break_candidates.json":
+        return _compact_ranked_json(content)
+    if filename == "candidate_audit.json":
+        return _compact_audit_json(content)
+    if filename == "provenance.json":
+        return _compact_json(content, keep_top_items=5)
+    return content[:12000]
+
+
+def _compact_summary_json(content: str) -> str:
+    payload = _load_json_object(content)
+    if payload is None:
+        return content[:8000]
+    compacted = {
+        key: payload.get(key)
+        for key in [
+            "study_id",
+            "created_at",
+            "input_path",
+            "models",
+            "parameters",
+            "metrics_processed",
+            "forecast_error_rows",
+            "anomaly_rows",
+            "cross_domain_break_rows",
+        ]
+    }
+    compacted["top_cross_domain_breaks"] = [
+        _select_fields(
+            item,
+            [
+                "target_year",
+                "affected_domains",
+                "affected_domain_count",
+                "anomaly_count",
+                "aggregate_score",
+            ],
+        )
+        for item in payload.get("top_cross_domain_breaks", [])[:5]
+        if isinstance(item, dict)
+    ]
+    return json.dumps(compacted, indent=2, ensure_ascii=False)
+
+
+def _compact_ranked_json(content: str) -> str:
+    payload = _load_json_object(content)
+    if payload is None:
+        return content[:8000]
+    compacted = {
+        key: payload.get(key)
+        for key in [
+            "study_id",
+            "created_at",
+            "source_study_path",
+            "ranking_parameters",
+            "all_candidates_count",
+            "representative_candidates_count",
+        ]
+    }
+    compacted["top_representative_candidates"] = [
+        _select_fields(
+            item,
+            [
+                "target_year",
+                "rank_score",
+                "affected_domain_count",
+                "anomaly_count",
+                "mean_z_score",
+                "max_z_score",
+                "p95_z_score",
+                "affected_domains",
+                "affected_metrics",
+                "affected_sources",
+                "model_count",
+                "persistence_score",
+                "ordinary_explanation_hint",
+            ],
+        )
+        for item in payload.get("top_representative_candidates", [])[:8]
+        if isinstance(item, dict)
+    ]
+    return json.dumps(compacted, indent=2, ensure_ascii=False)
+
+
+def _compact_audit_json(content: str) -> str:
+    payload = _load_json_object(content)
+    if payload is None:
+        return content[:8000]
+    compacted = {
+        key: payload.get(key)
+        for key in [
+            "study_id",
+            "created_at",
+            "source_study_path",
+            "audit_parameters",
+            "candidate_count",
+            "verdict_counts",
+        ]
+    }
+    for list_name in [
+        "top_strong_candidates",
+        "top_moderate_candidates",
+        "top_weak_candidates",
+    ]:
+        compacted[list_name] = [
+            _select_fields(
+                item,
+                [
+                    "target_year",
+                    "rank_score",
+                    "robustness_score",
+                    "audit_verdict",
+                    "affected_domains",
+                    "source_count",
+                    "metric_count",
+                    "domain_count",
+                    "model_count",
+                    "anomaly_count",
+                    "model_agreement_score",
+                    "domain_agreement_score",
+                    "persistence_score",
+                    "sparsity_risk",
+                    "historical_data_risk",
+                    "known_explanation_risk",
+                    "ordinary_explanation_hint",
+                    "audit_notes",
+                ],
+            )
+            for item in payload.get(list_name, [])[:5]
+            if isinstance(item, dict)
+        ]
+    return json.dumps(compacted, indent=2, ensure_ascii=False)
+
+
+def _load_json_object(content: str) -> dict[str, object] | None:
+    try:
+        payload = json.loads(content)
+    except json.JSONDecodeError:
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _select_fields(item: dict[str, object], fields: list[str]) -> dict[str, object]:
+    return {field: item.get(field) for field in fields}
+
+
+def _compact_json(content: str, *, keep_top_items: int) -> str:
+    try:
+        payload = json.loads(content)
+    except json.JSONDecodeError:
+        return content[:12000]
+    if isinstance(payload, dict):
+        compacted: dict[str, object] = {}
+        for key, value in payload.items():
+            if isinstance(value, list):
+                compacted[key] = value[:keep_top_items]
+            else:
+                compacted[key] = value
+        return json.dumps(compacted, indent=2, ensure_ascii=False)
+    return json.dumps(payload, indent=2, ensure_ascii=False)[:12000]
 
 
 def route_agents(*, client: LemonadeClient, model: str, study_content: str) -> list[str]:
@@ -193,6 +363,10 @@ def extract_confidence_level(report_text: str) -> str:
     if "low confidence" in lowered:
         return "low"
     return "medium"
+
+
+def summarize_report_for_synthesis(report_text: str, *, max_chars: int = 1200) -> str:
+    return report_text.strip()[:max_chars]
 
 
 def write_agent_run_json(
@@ -244,4 +418,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

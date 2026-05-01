@@ -72,7 +72,7 @@ def build_agent_prompt(
     system_prompt = "\n".join([
         f"You are the {spec.role} for ContinuityBreakDetector.",
         SAFETY_CONSTRAINTS,
-        "Return Markdown with clear sections: Evidence, Interpretation, Uncertainty, Findings.",
+        "Return concise Markdown under 700 words with clear sections: Evidence, Interpretation, Uncertainty, Findings.",
     ])
     previous = ""
     if previous_reports:
@@ -98,4 +98,3 @@ def build_router_prompt(study_content: str) -> tuple[str, str]:
     ])
     user_prompt = "Decide which agents are needed for this study. Default to all agents when uncertain.\n\n" + study_content
     return system_prompt, user_prompt
-

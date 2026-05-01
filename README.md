@@ -46,6 +46,7 @@ python main.py normalize
 python main.py compute_statistics
 python main.py backtest
 python main.py rank_breaks
+python main.py audit_candidates
 ```
 
 Normalized outputs are written to
@@ -66,6 +67,9 @@ exponential trend.
 
 Ranked break candidates are appended to the latest study folder by
 `python main.py rank_breaks`.
+
+Candidate audit files are appended to the latest study folder by
+`python main.py audit_candidates`.
 
 Optional environment variables:
 

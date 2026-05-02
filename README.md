@@ -154,6 +154,11 @@ Internally, ML predictions go through `ForecastClient`. The first implementation
 subprocess, or remote API backends should plug in there instead of adding new
 worker subprocess logic to pipeline modules.
 
+The request and response contract is centralized in
+`continuity_break_detector.prediction_schema`. The core client, worker
+`predict.py` scripts, and pipeline commands share those validation helpers so
+the JSON stdin/stdout shape stays consistent across backends.
+
 Docker Compose mounts a shared named volume, `hf_cache`, at
 `/root/.cache/huggingface` in both ML worker containers. The first full smoke or
 prediction run downloads model weights into that volume at runtime; later runs

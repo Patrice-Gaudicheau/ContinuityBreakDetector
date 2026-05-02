@@ -10,6 +10,12 @@ from continuity_break_detector.ml_workers import (
     WorkerPredictionResult,
     worker_prediction_from_forecast_result,
 )
+from continuity_break_detector.prediction_schema import (
+    PredictionError,
+    PredictionSchemaError,
+    prediction_error_to_json_dict,
+    validate_horizon,
+)
 
 
 def main() -> int:
@@ -25,15 +31,17 @@ def main() -> int:
     except ValueError as exc:
         _print_error(args.worker, "validation_error", str(exc))
         return 2
-    if args.horizon <= 0:
-        _print_error(args.worker, "validation_error", "horizon must be a positive integer")
+    try:
+        horizon = validate_horizon(args.horizon)
+    except PredictionSchemaError as exc:
+        _print_error(args.worker, "validation_error", str(exc))
         return 2
 
     result = worker_prediction_from_forecast_result(
         default_forecast_client().predict(
             args.worker,
             series,
-            args.horizon,
+            horizon,
             timeout_seconds=args.timeout,
         )
     )
@@ -66,13 +74,9 @@ def _print_result(result: WorkerPredictionResult) -> int:
 def _print_error(worker: str, error_type: str, message: str) -> None:
     print(
         json.dumps(
-            {
-                "worker": worker,
-                "error": {
-                    "type": error_type,
-                    "message": message,
-                },
-            },
+            prediction_error_to_json_dict(
+                PredictionError(worker=worker, error_type=error_type, message=message)
+            ),
             separators=(",", ":"),
         )
     )

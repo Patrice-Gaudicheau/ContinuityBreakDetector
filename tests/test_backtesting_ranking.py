@@ -93,7 +93,9 @@ def test_build_ranked_candidates() -> None:
     )
 
 
-def _anomaly(year: int, source_id: str, metric: str, model: str, z_score: float) -> dict[str, object]:
+def _anomaly(
+    year: int, source_id: str, metric: str, model: str, z_score: float
+) -> dict[str, object]:
     return {
         "source_id": source_id,
         "metric": metric,
@@ -105,4 +107,3 @@ def _anomaly(year: int, source_id: str, metric: str, model: str, z_score: float)
         "relative_error": 0.1,
         "severity": "medium",
     }
-

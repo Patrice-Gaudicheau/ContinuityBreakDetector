@@ -6,7 +6,9 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from continuity_break_detector.forecasting.adapters.deterministic_adapter import DeterministicAdapter
+from continuity_break_detector.forecasting.adapters.deterministic_adapter import (
+    DeterministicAdapter,
+)
 from continuity_break_detector.forecasting.adapters.timesfm_adapter import TimesFMAdapter
 from continuity_break_detector.forecasting.advanced_backtest import run_advanced_backtest_study
 from continuity_break_detector.forecasting.base import ForecastingError
@@ -41,8 +43,7 @@ def test_subprocess_client_success_using_fake_worker(tmp_path: Path) -> None:
 def test_subprocess_client_failure_json(tmp_path: Path) -> None:
     worker = tmp_path / "worker.py"
     worker.write_text(
-        "import json\n"
-        "print(json.dumps({'ok': False, 'error': 'boom'}))\n",
+        "import json\nprint(json.dumps({'ok': False, 'error': 'boom'}))\n",
         encoding="utf-8",
     )
 
@@ -165,4 +166,3 @@ def test_advanced_backtest_falls_back_to_deterministic(
     assert "timesfm" not in set(errors["model"])
     assert "chronos" not in set(errors["model"])
     assert (result.output_dir / "model_comparison.parquet").exists()
-

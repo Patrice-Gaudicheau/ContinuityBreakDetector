@@ -107,13 +107,12 @@ def build_candidate_audit(
     for position, candidate in enumerate(representatives.to_dict("records")):
         target_year = int(candidate["target_year"])
         year_anomalies = anomalies[anomalies["target_year"] == target_year]
-        year_forecasts = forecast_errors[forecast_errors["target_year"] == target_year]
         affected_domains = _as_list(candidate["affected_domains"])
-        anomalous_model_count = int(year_anomalies["model"].nunique()) if not year_anomalies.empty else 0
-        total_models = int(total_model_counts.get(target_year, 0))
-        model_agreement_score = (
-            anomalous_model_count / total_models if total_models > 0 else 0.0
+        anomalous_model_count = (
+            int(year_anomalies["model"].nunique()) if not year_anomalies.empty else 0
         )
+        total_models = int(total_model_counts.get(target_year, 0))
+        model_agreement_score = anomalous_model_count / total_models if total_models > 0 else 0.0
         domain_agreement_score = len(affected_domains) / max_domain_count
         pre_count = _window_count(
             forecast_errors,
@@ -162,10 +161,14 @@ def build_candidate_audit(
                 "audit_notes": audit_notes(sparsity, historical, known, pre_count, post_count),
             }
         )
-    return pd.DataFrame(rows).sort_values(
-        ["robustness_score", "rank_score"],
-        ascending=[False, False],
-    ).reset_index(drop=True)
+    return (
+        pd.DataFrame(rows)
+        .sort_values(
+            ["robustness_score", "rank_score"],
+            ascending=[False, False],
+        )
+        .reset_index(drop=True)
+    )
 
 
 def historical_data_risk(year: int) -> str:
@@ -249,10 +252,14 @@ def build_audit_json(
 ) -> dict[str, Any]:
     summary_path = study_path / "summary.json"
     summary = json.loads(summary_path.read_text(encoding="utf-8")) if summary_path.exists() else {}
-    verdict_counts = {
-        str(key): int(value)
-        for key, value in audit["audit_verdict"].value_counts().to_dict().items()
-    } if not audit.empty else {}
+    verdict_counts = (
+        {
+            str(key): int(value)
+            for key, value in audit["audit_verdict"].value_counts().to_dict().items()
+        }
+        if not audit.empty
+        else {}
+    )
     return {
         "study_id": summary.get("study_id", study_path.name),
         "created_at": datetime.now(UTC).isoformat(),
@@ -260,8 +267,12 @@ def build_audit_json(
         "audit_parameters": parameters.to_dict(),
         "candidate_count": int(len(audit)),
         "verdict_counts": verdict_counts,
-        "top_strong_candidates": _top_by_verdict(audit, "strong_candidate", parameters.top_list_limit),
-        "top_moderate_candidates": _top_by_verdict(audit, "moderate_candidate", parameters.top_list_limit),
+        "top_strong_candidates": _top_by_verdict(
+            audit, "strong_candidate", parameters.top_list_limit
+        ),
+        "top_moderate_candidates": _top_by_verdict(
+            audit, "moderate_candidate", parameters.top_list_limit
+        ),
         "top_weak_candidates": _top_by_verdict(audit, "weak_candidate", parameters.top_list_limit),
     }
 
@@ -316,7 +327,10 @@ def _available_model_counts(forecast_errors: pd.DataFrame) -> dict[int, int]:
         return {}
     return {
         int(year): int(count)
-        for year, count in forecast_errors.groupby("target_year")["model"].nunique().to_dict().items()
+        for year, count in forecast_errors.groupby("target_year")["model"]
+        .nunique()
+        .to_dict()
+        .items()
     }
 
 
@@ -329,10 +343,14 @@ def _window_count(df: pd.DataFrame, *, start_year: int, end_year: int) -> int:
 def _top_by_verdict(audit: pd.DataFrame, verdict: str, limit: int) -> list[dict[str, Any]]:
     if audit.empty:
         return []
-    top = audit[audit["audit_verdict"] == verdict].sort_values(
-        ["robustness_score", "rank_score"],
-        ascending=[False, False],
-    ).head(limit)
+    top = (
+        audit[audit["audit_verdict"] == verdict]
+        .sort_values(
+            ["robustness_score", "rank_score"],
+            ascending=[False, False],
+        )
+        .head(limit)
+    )
     return [_json_safe(record) for record in top.to_dict("records")]
 
 
@@ -409,4 +427,3 @@ def _empty_audit_frame() -> pd.DataFrame:
             "audit_notes",
         ]
     )
-

@@ -9,7 +9,6 @@ from typing import Any, Protocol, TypeAlias
 
 from continuity_break_detector.utils.paths import RAW_DATA_DIR, ensure_directory
 
-
 RawPayload: TypeAlias = list[dict[str, Any]] | dict[str, Any] | str
 
 
@@ -42,11 +41,9 @@ class SourceConnector(Protocol):
     rate_limit_policy: str
     output_format: str
 
-    def fetch(self) -> RawPayload:
-        ...
+    def fetch(self) -> RawPayload: ...
 
-    def iter_fetches(self) -> list[RawFetch]:
-        ...
+    def iter_fetches(self) -> list[RawFetch]: ...
 
 
 def utc_timestamp() -> str:
@@ -98,4 +95,3 @@ class RawStorage:
             encoding="utf-8",
         )
         return StoredRawFetch(raw_file=raw_file, metadata_file=metadata_file)
-

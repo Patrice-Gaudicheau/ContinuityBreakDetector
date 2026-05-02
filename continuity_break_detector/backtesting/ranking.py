@@ -14,7 +14,6 @@ from continuity_break_detector.backtesting.study import STUDIES_DIR
 from continuity_break_detector.backtesting.study_discovery import latest_valid_study_folder
 from continuity_break_detector.storage.parquet import read_parquet, write_parquet
 
-
 EXPLANATION_HINTS: dict[int, str] = {
     1914: "World War I",
     1918: "World War I aftermath and influenza pandemic",
@@ -142,8 +141,12 @@ def build_ranked_candidates(
                 "max_z_score": float(group["z_score"].max()),
                 "p95_z_score": float(group["z_score"].quantile(0.95)),
                 "affected_domains": domains,
-                "affected_metrics": sorted(str(value) for value in group["metric"].dropna().unique()),
-                "affected_sources": sorted(str(value) for value in group["source_id"].dropna().unique()),
+                "affected_metrics": sorted(
+                    str(value) for value in group["metric"].dropna().unique()
+                ),
+                "affected_sources": sorted(
+                    str(value) for value in group["source_id"].dropna().unique()
+                ),
                 "model_count": int(group["model"].nunique()),
                 "persistence_score": 0.0,
                 "ordinary_explanation_hint": explanation_hint(target_year_int),
@@ -171,7 +174,9 @@ def min_max_normalize(values: pd.Series) -> pd.Series:
     return (values - minimum) / (maximum - minimum)
 
 
-def persistence_score(target_year: int, anomalous_years: set[int], *, neighborhood: int = 2) -> float:
+def persistence_score(
+    target_year: int, anomalous_years: set[int], *, neighborhood: int = 2
+) -> float:
     years = range(target_year - neighborhood, target_year + neighborhood + 1)
     return sum(1 for year in years if year in anomalous_years) / float(neighborhood * 2 + 1)
 
@@ -190,7 +195,9 @@ def explanation_hint(year: int) -> str | None:
 
 def mark_representatives(candidates: pd.DataFrame, *, window_years: int = 3) -> pd.DataFrame:
     if candidates.empty:
-        return candidates.assign(is_representative=pd.Series(dtype=bool), representative_year=pd.Series(dtype=int))
+        return candidates.assign(
+            is_representative=pd.Series(dtype=bool), representative_year=pd.Series(dtype=int)
+        )
 
     ranked = candidates.sort_values("rank_score", ascending=False).copy()
     representative_for: dict[int, int] = {}
@@ -207,9 +214,7 @@ def mark_representatives(candidates: pd.DataFrame, *, window_years: int = 3) -> 
     result["representative_year"] = [
         representative_for.get(int(year), int(year)) for year in result["target_year"]
     ]
-    result["is_representative"] = [
-        int(year) in representatives for year in result["target_year"]
-    ]
+    result["is_representative"] = [int(year) in representatives for year in result["target_year"]]
     return result
 
 
@@ -249,42 +254,47 @@ def build_markdown(top_candidates: list[dict[str, Any]]) -> str:
     ]
     for item in top_candidates[:20]:
         hint = item.get("ordinary_explanation_hint") or "none"
-        lines.extend([
-            f"### {item['target_year']}",
-            f"- rank_score: {float(item['rank_score']):.4f}",
-            f"- affected_domains: {item['affected_domains']}",
-            f"- anomaly_count: {item['anomaly_count']}",
-            f"- mean_z_score: {float(item['mean_z_score']):.4f}",
-            f"- max_z_score: {float(item['max_z_score']):.4f}",
-            f"- persistence_score: {float(item['persistence_score']):.4f}",
-            f"- ordinary_explanation_hint: {hint}",
-            "",
-        ])
+        lines.extend(
+            [
+                f"### {item['target_year']}",
+                f"- rank_score: {float(item['rank_score']):.4f}",
+                f"- affected_domains: {item['affected_domains']}",
+                f"- anomaly_count: {item['anomaly_count']}",
+                f"- mean_z_score: {float(item['mean_z_score']):.4f}",
+                f"- max_z_score: {float(item['max_z_score']):.4f}",
+                f"- persistence_score: {float(item['persistence_score']):.4f}",
+                f"- ordinary_explanation_hint: {hint}",
+                "",
+            ]
+        )
     if not top_candidates:
         lines.append("No representative candidates were produced.")
         lines.append("")
 
     hinted = [item for item in top_candidates[:20] if item.get("ordinary_explanation_hint")]
-    lines.extend([
-        "## Ordinary Explanation Hints",
-        "Hints are exact-year dictionary matches only; no explanation is inferred.",
-    ])
+    lines.extend(
+        [
+            "## Ordinary Explanation Hints",
+            "Hints are exact-year dictionary matches only; no explanation is inferred.",
+        ]
+    )
     if hinted:
         lines.extend(
-            f"- {item['target_year']}: {item['ordinary_explanation_hint']}"
-            for item in hinted
+            f"- {item['target_year']}: {item['ordinary_explanation_hint']}" for item in hinted
         )
     else:
         lines.append("- No exact-year hints matched the top candidates.")
-    lines.extend([
-        "",
-        "## Notes and Limitations",
-        "These rankings are deterministic filters over forecast-error anomalies. Source coverage, sparse historical data, and baseline-model limits can affect the ordering.",
-        "",
-        "## Conclusion",
-        "These are statistical candidates requiring interpretation. They are not simulations, proof of rapid influx, or causal explanations.",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Notes and Limitations",
+            "These rankings are deterministic filters over forecast-error anomalies. Source coverage, sparse historical data, and baseline-model limits can affect the ordering.",
+            "",
+            "## Conclusion",
+            "These are statistical candidates requiring interpretation. They are not simulations, proof of rapid influx, or causal explanations.",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -328,7 +338,7 @@ def _json_safe(record: dict[str, Any]) -> dict[str, Any]:
     for key, value in record.items():
         if isinstance(value, np.generic):
             safe[key] = value.item()
-        elif (pd.isna(value) if not isinstance(value, list) else False):
+        elif pd.isna(value) if not isinstance(value, list) else False:
             safe[key] = None
         else:
             safe[key] = value

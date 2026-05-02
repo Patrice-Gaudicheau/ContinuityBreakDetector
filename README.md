@@ -1,5 +1,7 @@
 # ContinuityBreakDetector
 
+[![CI](https://github.com/<OWNER>/ContinuityBreakDetector/actions/workflows/test.yml/badge.svg)](https://github.com/<OWNER>/ContinuityBreakDetector/actions/workflows/test.yml)
+
 ContinuityBreakDetector is a deterministic-first research pipeline for finding
 candidate continuity breaks in long-term public time-series data. It retrieves
 raw source data, normalizes it into yearly time series, computes transparent
@@ -23,14 +25,43 @@ substantively meaningful. ContinuityBreakDetector separates the workflow into
 retrieval, normalization, deterministic statistics, backtesting, ranking, audit,
 artifact filtering, and optional interpretation so each claim can be inspected.
 
+## Quick Start
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[test]'
+make quality
+make run-demo
+```
+
+`make run-demo` uses only committed synthetic examples and does not require
+network access, local model paths, Lemonade, TimesFM, or Chronos.
+
+## Feature Matrix
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Core deterministic pipeline | Included | Retrieval, normalization, statistics, backtesting, ranking, audit, and artifact filtering |
+| TimesFM / Chronos subprocess forecasting | Optional | Requires local model environments configured with environment variables |
+| Lemonade local agent reports | Optional | Reads deterministic study outputs; not part of the scientific method |
+| Paper drafting workflow | Optional | Builds factual tables first, then drafts prose from a compact brief |
+| Generated data in Git | Excluded | Raw data, processed data, studies, and paper drafts are ignored |
+
 ## Architecture
 
-```text
-public APIs -> data/raw/ -> normalization -> data/processed/normalized/
-           -> deterministic statistics -> data/processed/statistics/
-           -> backtesting studies -> studies/backtests/
-           -> ranking, audit, artifact filtering
-           -> optional local reports and paper drafts
+```mermaid
+flowchart TD
+    A["Public source APIs"] --> B["Raw files + retrieval metadata"]
+    B --> C["Normalized yearly time series"]
+    C --> D["Deterministic statistics"]
+    C --> E["Historical backtests"]
+    E --> F["Candidate ranking"]
+    F --> G["Candidate audit"]
+    G --> H["Data artifact filtering"]
+    H --> I["Study outputs"]
+    I --> J["Optional local reports"]
+    I --> K["Optional paper draft"]
 ```
 
 Core design choices:
@@ -185,11 +216,18 @@ Generated outputs are local artifacts and are ignored by Git:
 
 Safe synthetic examples are committed under [examples/](examples/).
 
+## Public Article
+
+A general-audience article is available at
+[publication/detecting-global-continuity-breaks.md](publication/detecting-global-continuity-breaks.md).
+
 ## Development
 
 ```bash
 make test
-make lint-basic
+make lint
+make format-check
+make quality
 make typecheck-basic
 make clean-generated
 make run-demo
@@ -220,4 +258,3 @@ validation, broader data coverage, and independent replication.
 Real raw data, processed data, study outputs, SQLite files, model caches, and
 draft paper outputs are excluded from Git. The repository is intended to publish
 the reproducible pipeline, not large generated artifacts.
-

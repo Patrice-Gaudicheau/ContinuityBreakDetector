@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pandas as pd
 
-
 SOURCE_ID = "crossref"
 
 
@@ -30,14 +29,18 @@ def normalize_payload(payload: dict[str, object], year: int) -> pd.DataFrame:
         count = message.get("total-results")
         if count is None and isinstance(message.get("items"), list):
             count = len(message["items"])
-    return pd.DataFrame([{
-        "source_id": SOURCE_ID,
-        "metric": "works_count",
-        "year": year,
-        "value": float(count or 0),
-        "unit": "works",
-        "entity": None,
-    }])
+    return pd.DataFrame(
+        [
+            {
+                "source_id": SOURCE_ID,
+                "metric": "works_count",
+                "year": year,
+                "value": float(count or 0),
+                "unit": "works",
+                "entity": None,
+            }
+        ]
+    )
 
 
 def log_missing_years(df: pd.DataFrame) -> int:

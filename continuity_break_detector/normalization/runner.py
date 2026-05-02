@@ -13,7 +13,6 @@ from continuity_break_detector.normalization.models import NormalizationResult
 from continuity_break_detector.storage.parquet import write_parquet
 from continuity_break_detector.utils.paths import PROJECT_ROOT, RAW_DATA_DIR
 
-
 LOGGER = logging.getLogger(__name__)
 NORMALIZED_DIR = PROJECT_ROOT / "data" / "processed" / "normalized"
 Normalizer = Callable[..., pd.DataFrame]

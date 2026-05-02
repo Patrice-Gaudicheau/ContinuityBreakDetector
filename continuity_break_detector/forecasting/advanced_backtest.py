@@ -13,9 +13,9 @@ from continuity_break_detector.backtesting.anomalies import build_anomalies
 from continuity_break_detector.backtesting.domains import build_cross_domain_breaks
 from continuity_break_detector.backtesting.engine import FORECAST_ERROR_COLUMNS, backtest_metric
 from continuity_break_detector.backtesting.study import (
-    BacktestParameters,
     NORMALIZED_DIR,
     STUDIES_DIR,
+    BacktestParameters,
     build_provenance,
     normalized_metric_paths,
     top_cross_domain_breaks,
@@ -24,7 +24,6 @@ from continuity_break_detector.forecasting.base import ForecasterAvailability
 from continuity_break_detector.forecasting.registry import build_forecaster_registry
 from continuity_break_detector.storage.parquet import read_parquet, write_parquet
 from continuity_break_detector.utils.paths import ensure_directory
-
 
 MODEL_COMPARISON_COLUMNS = [
     "model",
@@ -164,15 +163,17 @@ def build_model_comparison(
         squared = group["squared_error"].astype(float)
         absolute = group["absolute_error"].astype(float)
         key = (model, metric)
-        rows.append({
-            "model": model,
-            "metric": metric,
-            "mae": float(absolute.mean()),
-            "rmse": float(np.sqrt(squared.mean())),
-            "median_absolute_error": float(absolute.median()),
-            "anomaly_count": int(anomaly_counts.get(key, 0)),
-            "extreme_anomaly_count": int(extreme_counts.get(key, 0)),
-        })
+        rows.append(
+            {
+                "model": model,
+                "metric": metric,
+                "mae": float(absolute.mean()),
+                "rmse": float(np.sqrt(squared.mean())),
+                "median_absolute_error": float(absolute.median()),
+                "anomaly_count": int(anomaly_counts.get(key, 0)),
+                "extreme_anomaly_count": int(extreme_counts.get(key, 0)),
+            }
+        )
     return pd.DataFrame(rows, columns=MODEL_COMPARISON_COLUMNS)
 
 
@@ -232,45 +233,47 @@ def build_advanced_markdown_report(
         for item in top_breaks[:10]
     ] or ["- No cross-domain break candidates met the anomaly threshold."]
 
-    return "\n".join([
-        "# Advanced Continuity Break Backtest Study",
-        "",
-        "## Objective",
-        "Compare deterministic baselines with optional local advanced forecasters on normalized yearly time series.",
-        "",
-        "## Method",
-        "The study reuses the rolling historical backtest pipeline and plugs available forecaster adapters into the same forecast-error evaluation.",
-        "",
-        "## Models Run",
-        *model_lines,
-        "",
-        "## Forecaster Availability",
-        *availability_lines,
-        "",
-        "## Parameters",
-        f"- train_window_years: {parameters['train_window_years']}",
-        f"- forecast_horizon_years: {parameters['forecast_horizon_years']}",
-        f"- minimum_series_length: {parameters['minimum_series_length']}",
-        f"- anomaly_window: {parameters['anomaly_window']}",
-        f"- anomaly_threshold: {parameters['anomaly_threshold']}",
-        "",
-        "## Outputs",
-        f"- metrics_processed: {summary['metrics_processed']}",
-        f"- forecast_error_rows: {summary['forecast_error_rows']}",
-        f"- anomaly_rows: {summary['anomaly_rows']}",
-        f"- cross_domain_break_rows: {summary['cross_domain_break_rows']}",
-        f"- model_comparison_rows: {summary['model_comparison_rows']}",
-        "",
-        "## Top Cross-Domain Break Candidates",
-        *top_lines,
-        "",
-        "## Limitations",
-        "TimesFM and Chronos are optional local integrations. If an adapter imports but cannot produce a forecast with the available local checkout, the run continues with remaining models.",
-        "",
-        "## Conclusion",
-        "This study reports forecast-error behavior only. It does not add interpretation, simulation claims, or causal conclusions.",
-        "",
-    ])
+    return "\n".join(
+        [
+            "# Advanced Continuity Break Backtest Study",
+            "",
+            "## Objective",
+            "Compare deterministic baselines with optional local advanced forecasters on normalized yearly time series.",
+            "",
+            "## Method",
+            "The study reuses the rolling historical backtest pipeline and plugs available forecaster adapters into the same forecast-error evaluation.",
+            "",
+            "## Models Run",
+            *model_lines,
+            "",
+            "## Forecaster Availability",
+            *availability_lines,
+            "",
+            "## Parameters",
+            f"- train_window_years: {parameters['train_window_years']}",
+            f"- forecast_horizon_years: {parameters['forecast_horizon_years']}",
+            f"- minimum_series_length: {parameters['minimum_series_length']}",
+            f"- anomaly_window: {parameters['anomaly_window']}",
+            f"- anomaly_threshold: {parameters['anomaly_threshold']}",
+            "",
+            "## Outputs",
+            f"- metrics_processed: {summary['metrics_processed']}",
+            f"- forecast_error_rows: {summary['forecast_error_rows']}",
+            f"- anomaly_rows: {summary['anomaly_rows']}",
+            f"- cross_domain_break_rows: {summary['cross_domain_break_rows']}",
+            f"- model_comparison_rows: {summary['model_comparison_rows']}",
+            "",
+            "## Top Cross-Domain Break Candidates",
+            *top_lines,
+            "",
+            "## Limitations",
+            "TimesFM and Chronos are optional local integrations. If an adapter imports but cannot produce a forecast with the available local checkout, the run continues with remaining models.",
+            "",
+            "## Conclusion",
+            "This study reports forecast-error behavior only. It does not add interpretation, simulation claims, or causal conclusions.",
+            "",
+        ]
+    )
 
 
 def availability_record(availability: ForecasterAvailability) -> dict[str, Any]:

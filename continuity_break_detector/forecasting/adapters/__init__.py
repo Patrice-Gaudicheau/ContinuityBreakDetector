@@ -1,2 +1,1 @@
 """Concrete forecasting adapters."""
-

@@ -45,7 +45,9 @@ class OpenAlexConnector:
                 }
                 if self.api_key:
                     params["api_key"] = self.api_key
-                response = self.client.get(url, params=params, headers={"Accept": "application/json"})
+                response = self.client.get(
+                    url, params=params, headers={"Accept": "application/json"}
+                )
                 response.raise_for_status()
                 payload = response.json()
                 fetches.append(
@@ -66,4 +68,3 @@ class OpenAlexConnector:
                 if not cursor or not payload.get("results"):
                     break
         return fetches
-

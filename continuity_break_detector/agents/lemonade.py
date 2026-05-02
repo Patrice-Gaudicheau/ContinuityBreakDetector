@@ -120,7 +120,9 @@ class LemonadeClient:
             try:
                 response.raise_for_status()
             except httpx.HTTPStatusError as exc:
-                if include_chat_template_kwargs and _looks_like_unsupported_template_kwargs(response):
+                if include_chat_template_kwargs and _looks_like_unsupported_template_kwargs(
+                    response
+                ):
                     return self._chat_json_with_status(
                         model=model,
                         system_prompt=system_prompt,
@@ -183,7 +185,9 @@ def first_choice_or_none(data: dict[str, Any]) -> Any:
     return choices[0]
 
 
-def safe_response_metadata(data: dict[str, Any], *, status_code: int | None = None) -> dict[str, Any]:
+def safe_response_metadata(
+    data: dict[str, Any], *, status_code: int | None = None
+) -> dict[str, Any]:
     choices = data.get("choices")
     first_choice = first_choice_or_none(data)
     message = first_choice.get("message") if isinstance(first_choice, dict) else None
@@ -192,9 +196,13 @@ def safe_response_metadata(data: dict[str, Any], *, status_code: int | None = No
         "top_level_json_keys": sorted(str(key) for key in data.keys()),
         "choices_length": len(choices) if isinstance(choices, list) else 0,
         "first_choice_keys": (
-            sorted(str(key) for key in first_choice.keys()) if isinstance(first_choice, dict) else []
+            sorted(str(key) for key in first_choice.keys())
+            if isinstance(first_choice, dict)
+            else []
         ),
-        "message_keys": sorted(str(key) for key in message.keys()) if isinstance(message, dict) else [],
+        "message_keys": sorted(str(key) for key in message.keys())
+        if isinstance(message, dict)
+        else [],
         "content_exists": bool(extract_visible_content(data)),
         "reasoning_content_exists": has_reasoning_content(data),
         "finish_reason": (

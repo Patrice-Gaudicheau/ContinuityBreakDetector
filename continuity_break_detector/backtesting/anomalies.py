@@ -3,7 +3,6 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-
 ANOMALY_COLUMNS = [
     "source_id",
     "metric",
@@ -64,4 +63,3 @@ def classify_severity(z_score: float) -> str:
     if z_score >= 3.5:
         return "high"
     return "medium"
-

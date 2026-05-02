@@ -269,4 +269,3 @@ def make_study_fixture(tmp_path: Path) -> Path:
         study / "cross_domain_breaks.parquet",
     )
     return study
-

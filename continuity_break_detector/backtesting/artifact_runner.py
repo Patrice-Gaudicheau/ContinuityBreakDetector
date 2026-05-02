@@ -7,12 +7,14 @@ from continuity_break_detector.backtesting.artifacts import (
     ArtifactParameters,
     detect_study_artifacts,
 )
-from continuity_break_detector.backtesting.study_discovery import resolve_study_path
 from continuity_break_detector.backtesting.study import STUDIES_DIR
+from continuity_break_detector.backtesting.study_discovery import resolve_study_path
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Detect likely data artifacts in break candidates.")
+    parser = argparse.ArgumentParser(
+        description="Detect likely data artifacts in break candidates."
+    )
     parser.add_argument("--studies-dir", type=Path, default=STUDIES_DIR)
     parser.add_argument("--study-path", type=Path)
     args = parser.parse_args()

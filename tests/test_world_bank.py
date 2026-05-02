@@ -15,4 +15,3 @@ def test_world_bank_pagination_reads_pages_from_metadata() -> None:
 def test_world_bank_pagination_defaults_to_one_for_bad_payload() -> None:
     assert world_bank_total_pages({}) == 1
     assert world_bank_total_pages([{"pages": None}]) == 1
-

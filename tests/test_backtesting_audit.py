@@ -46,4 +46,3 @@ def test_audit_verdict_classification() -> None:
     assert audit_verdict(0.70) == "strong_candidate"
     assert audit_verdict(0.45) == "moderate_candidate"
     assert audit_verdict(0.44) == "weak_candidate"
-

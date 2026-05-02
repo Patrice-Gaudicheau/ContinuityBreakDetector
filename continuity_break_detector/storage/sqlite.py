@@ -12,4 +12,3 @@ def append_dataframe(df: pd.DataFrame, database_path: Path, table_name: str) -> 
     ensure_directory(database_path.parent)
     with sqlite3.connect(database_path) as connection:
         df.to_sql(table_name, connection, if_exists="append", index=False)
-

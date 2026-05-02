@@ -41,4 +41,3 @@ def _series(values: list[float]) -> pd.DataFrame:
             "entity": None,
         }
     )
-

@@ -3,7 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from continuity_break_detector.forecasting.adapters.chronos_adapter import ChronosAdapter
-from continuity_break_detector.forecasting.adapters.deterministic_adapter import deterministic_adapters
+from continuity_break_detector.forecasting.adapters.deterministic_adapter import (
+    deterministic_adapters,
+)
 from continuity_break_detector.forecasting.adapters.timesfm_adapter import TimesFMAdapter
 from continuity_break_detector.forecasting.base import ForecasterAdapter, ForecasterAvailability
 
@@ -25,13 +27,14 @@ class ForecasterRegistry:
 
 
 def build_forecaster_registry() -> ForecasterRegistry:
-    return ForecasterRegistry([
-        *deterministic_adapters(),
-        TimesFMAdapter(),
-        ChronosAdapter(),
-    ])
+    return ForecasterRegistry(
+        [
+            *deterministic_adapters(),
+            TimesFMAdapter(),
+            ChronosAdapter(),
+        ]
+    )
 
 
 def deterministic_forecaster_ids() -> set[str]:
     return {"naive_last_value", "linear_trend", "exponential_trend"}
-

@@ -9,7 +9,6 @@ import pandas as pd
 
 from continuity_break_detector.normalization.models import NormalizedRecord
 
-
 LOGGER = logging.getLogger(__name__)
 SOURCE_ID = "world_bank_wdi"
 INDICATORS = {"SP.POP.TOTL", "NY.GDP.MKTP.CD", "NY.GDP.PCAP.CD"}
@@ -124,11 +123,14 @@ def _indicator_from_combined_path(path: Path) -> str:
 
 
 def _to_frame(records: list[NormalizedRecord]) -> pd.DataFrame:
-    return pd.DataFrame([record.__dict__ for record in records], columns=[
-        "source_id",
-        "metric",
-        "year",
-        "value",
-        "unit",
-        "entity",
-    ])
+    return pd.DataFrame(
+        [record.__dict__ for record in records],
+        columns=[
+            "source_id",
+            "metric",
+            "year",
+            "value",
+            "unit",
+            "entity",
+        ],
+    )

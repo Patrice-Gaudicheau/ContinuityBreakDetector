@@ -7,7 +7,6 @@ from typing import Any
 
 import httpx
 
-
 LOGGER = logging.getLogger(__name__)
 DEFAULT_USER_AGENT = "ContinuityBreakDetector/0.1"
 
@@ -90,4 +89,3 @@ class HttpClient:
         if self._last_request_at and elapsed < self.min_interval_seconds:
             time.sleep(self.min_interval_seconds - elapsed)
         self._last_request_at = time.monotonic()
-

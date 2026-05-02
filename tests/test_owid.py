@@ -8,4 +8,3 @@ def test_owid_url_builder_returns_csv_and_metadata_urls() -> None:
 
     assert csv_url == "https://ourworldindata.org/grapher/life-expectancy.csv"
     assert metadata_url == "https://ourworldindata.org/grapher/life-expectancy.metadata.json"
-

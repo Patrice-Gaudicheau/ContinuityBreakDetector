@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pandas as pd
 
-
 LOGGER = logging.getLogger(__name__)
 SOURCE_ID = "owid"
 IDENTIFIER_COLUMNS = {"Entity", "Code", "Year"}
@@ -32,9 +31,9 @@ def normalize_csv(path: Path, *, slug: str) -> pd.DataFrame:
     ]
     rows: list[dict[str, object]] = []
     for column in value_columns:
-        subset = source[["Year", column, *[c for c in ["Code", "Entity"] if c in source.columns]]].dropna(
-            subset=[column]
-        )
+        subset = source[
+            ["Year", column, *[c for c in ["Code", "Entity"] if c in source.columns]]
+        ].dropna(subset=[column])
         for row in subset.to_dict("records"):
             code = row.get("Code")
             entity_name = row.get("Entity")
@@ -73,4 +72,8 @@ def _slug_from_csv_path(path: Path) -> str:
     marker = "_csv.csv"
     without_marker = name[: -len(marker)] if name.endswith(marker) else path.stem
     parts = without_marker.split("_", 2)
-    return parts[2] if len(parts) == 3 and parts[0].isdigit() and parts[1].isdigit() else without_marker
+    return (
+        parts[2]
+        if len(parts) == 3 and parts[0].isdigit() and parts[1].isdigit()
+        else without_marker
+    )

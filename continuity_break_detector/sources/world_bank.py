@@ -97,4 +97,3 @@ def world_bank_total_pages(payload: RawPayload) -> int:
         return max(1, int(pages))
     except (TypeError, ValueError):
         return 1
-

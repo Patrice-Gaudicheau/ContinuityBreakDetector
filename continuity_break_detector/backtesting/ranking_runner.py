@@ -7,8 +7,8 @@ from continuity_break_detector.backtesting.ranking import (
     RankingParameters,
     rank_study,
 )
-from continuity_break_detector.backtesting.study_discovery import resolve_study_path
 from continuity_break_detector.backtesting.study import STUDIES_DIR
+from continuity_break_detector.backtesting.study_discovery import resolve_study_path
 
 
 def main() -> int:

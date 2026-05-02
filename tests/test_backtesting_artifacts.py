@@ -74,4 +74,3 @@ def test_artifact_verdict_classification() -> None:
     assert artifact_verdict(0.60) == "likely_data_artifact"
     assert artifact_verdict(0.35) == "possible_data_artifact"
     assert artifact_verdict(0.34) == "low_artifact_risk"
-

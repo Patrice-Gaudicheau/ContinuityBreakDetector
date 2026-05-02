@@ -56,4 +56,3 @@ def deterministic_adapters() -> list[DeterministicAdapter]:
         DeterministicAdapter("linear_trend", "linear_trend"),
         DeterministicAdapter("exponential_trend", "exponential_trend"),
     ]
-

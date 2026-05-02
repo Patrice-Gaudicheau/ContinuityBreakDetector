@@ -9,7 +9,6 @@ import pandas as pd
 from continuity_break_detector.forecasting.base import ForecasterAdapter, ForecastingError
 from continuity_break_detector.forecasting.registry import deterministic_forecaster_ids
 
-
 logger = logging.getLogger(__name__)
 
 FORECAST_ERROR_COLUMNS = [
@@ -116,7 +115,9 @@ def _predict_forecasters(
     disabled_forecasters: set[str],
 ) -> dict[str, dict[int, float]]:
     predictions: dict[str, dict[int, float]] = {}
-    forecast_years = list(range(int(train_series.index[-1]) + 1, int(train_series.index[-1]) + horizon + 1))
+    forecast_years = list(
+        range(int(train_series.index[-1]) + 1, int(train_series.index[-1]) + horizon + 1)
+    )
     for forecaster in forecasters:
         if forecaster.forecaster_id in disabled_forecasters:
             continue

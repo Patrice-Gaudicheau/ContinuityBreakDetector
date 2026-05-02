@@ -30,4 +30,3 @@ def backtest_advanced_main() -> int:
     print(f"cross_domain_breaks: {result.cross_domain_break_rows}")
     print(f"models_run: {', '.join(result.models_run) if result.models_run else 'none'}")
     return 0
-

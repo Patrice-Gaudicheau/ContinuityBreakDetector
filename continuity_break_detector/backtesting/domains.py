@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pandas as pd
 
-
 CROSS_DOMAIN_COLUMNS = [
     "target_year",
     "affected_domains",
@@ -60,4 +59,3 @@ def build_cross_domain_breaks(anomalies: pd.DataFrame) -> pd.DataFrame:
         ["aggregate_score", "anomaly_count"],
         ascending=[False, False],
     )
-

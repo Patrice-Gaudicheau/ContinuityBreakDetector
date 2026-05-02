@@ -19,4 +19,3 @@ def load_agent_config() -> AgentConfig:
         router_model=os.getenv("CBD_ROUTER_MODEL", "Qwen3-0.6B-GGUF"),
         executor_model=os.getenv("CBD_EXECUTOR_MODEL", "Qwen3.5-35B-A3B-GGUF"),
     )
-

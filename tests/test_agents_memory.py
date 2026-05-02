@@ -71,4 +71,3 @@ def test_agent_report_insertion(tmp_path) -> None:  # type: ignore[no-untyped-de
             "SELECT report_id, agent_name, confidence_level FROM agent_reports"
         ).fetchone()
     assert row == ("report_1", "source_auditor", "low")
-

@@ -9,9 +9,9 @@ from continuity_break_detector.forecasting.base import ForecasterAvailability, F
 from continuity_break_detector.forecasting.subprocess_client import (
     run_worker_forecast,
     smoke_test_worker,
+    timeout_seconds,
     timesfm_python,
     timesfm_worker_path,
-    timeout_seconds,
 )
 
 
@@ -101,4 +101,3 @@ def _enforce_optional_forecast_limit(forecaster_id: str, completed_count: int) -
     limit = int(raw_limit)
     if completed_count >= limit:
         raise ForecastingError(f"{forecaster_id} optional forecast limit reached: {limit}")
-

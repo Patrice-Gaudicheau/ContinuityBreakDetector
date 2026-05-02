@@ -34,4 +34,3 @@ def test_world_bank_normalization_from_fixture() -> None:
             "entity": "FRA",
         }
     ]
-

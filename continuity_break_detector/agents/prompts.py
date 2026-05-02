@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
 AGENT_ORDER = [
     "source_auditor",
     "statistical_reviewer",
@@ -12,19 +11,21 @@ AGENT_ORDER = [
 ]
 
 
-SAFETY_CONSTRAINTS = "\n".join([
-    "Do not claim proof of simulation.",
-    "Do not invent data.",
-    "Use only the provided study content.",
-    "Separate evidence from interpretation.",
-    "Prefer ordinary explanations.",
-    "Prefer artifact explanations over exotic explanations when artifact evidence exists.",
-    "Explicitly mention uncertainty.",
-    "If evidence is insufficient, say so.",
-    "Do not calculate new statistics.",
-    "Do not modify data.",
-    "Provide concise rationale only; do not expose hidden chain-of-thought.",
-])
+SAFETY_CONSTRAINTS = "\n".join(
+    [
+        "Do not claim proof of simulation.",
+        "Do not invent data.",
+        "Use only the provided study content.",
+        "Separate evidence from interpretation.",
+        "Prefer ordinary explanations.",
+        "Prefer artifact explanations over exotic explanations when artifact evidence exists.",
+        "Explicitly mention uncertainty.",
+        "If evidence is insufficient, say so.",
+        "Do not calculate new statistics.",
+        "Do not modify data.",
+        "Provide concise rationale only; do not expose hidden chain-of-thought.",
+    ]
+)
 
 
 @dataclass(frozen=True)
@@ -91,32 +92,41 @@ def build_agent_prompt(
     previous_reports: dict[str, str] | None = None,
 ) -> tuple[str, str]:
     spec = AGENT_SPECS[agent_name]
-    system_prompt = "\n".join([
-        f"You are the {spec.role} for ContinuityBreakDetector.",
-        SAFETY_CONSTRAINTS,
-        "Return concise Markdown under 500 words with complete sections. End with a short Conclusion. Do not trail off mid-sentence.",
-    ])
+    system_prompt = "\n".join(
+        [
+            f"You are the {spec.role} for ContinuityBreakDetector.",
+            SAFETY_CONSTRAINTS,
+            "Return concise Markdown under 500 words with complete sections. End with a short Conclusion. Do not trail off mid-sentence.",
+        ]
+    )
     previous = ""
     if previous_reports:
         previous = "\n\nPrevious agent reports:\n" + "\n\n".join(
             f"## {name}\n{text}" for name, text in previous_reports.items()
         )
-    user_prompt = "\n".join([
-        f"Agent: {spec.name}",
-        f"Focus: {spec.focus}",
-        "",
-        "Study content:",
-        study_content,
-        previous,
-    ])
+    user_prompt = "\n".join(
+        [
+            f"Agent: {spec.name}",
+            f"Focus: {spec.focus}",
+            "",
+            "Study content:",
+            study_content,
+            previous,
+        ]
+    )
     return system_prompt, user_prompt
 
 
 def build_router_prompt(study_content: str) -> tuple[str, str]:
-    system_prompt = "\n".join([
-        "You are a routing classifier for ContinuityBreakDetector.",
-        SAFETY_CONSTRAINTS,
-        "Return only a comma-separated subset of: source_auditor, statistical_reviewer, domain_interpreter, skeptic, synthesis.",
-    ])
-    user_prompt = "Decide which agents are needed for this study. Default to all agents when uncertain.\n\n" + study_content
+    system_prompt = "\n".join(
+        [
+            "You are a routing classifier for ContinuityBreakDetector.",
+            SAFETY_CONSTRAINTS,
+            "Return only a comma-separated subset of: source_auditor, statistical_reviewer, domain_interpreter, skeptic, synthesis.",
+        ]
+    )
+    user_prompt = (
+        "Decide which agents are needed for this study. Default to all agents when uncertain.\n\n"
+        + study_content
+    )
     return system_prompt, user_prompt

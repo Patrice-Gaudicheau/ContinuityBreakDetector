@@ -21,4 +21,3 @@ class NormalizationResult:
     rows_written: int
     warnings_count: int
     path: Path
-

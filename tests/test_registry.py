@@ -12,4 +12,3 @@ def test_registry_loads_implemented_connectors() -> None:
         assert connector.name
         assert connector.base_url.startswith(("http://", "https://"))
         assert connector.documentation_url.startswith("https://")
-

@@ -11,4 +11,3 @@ __all__ = [
     "NOT_IMPLEMENTED_SOURCE_IDS",
     "build_registry",
 ]
-

@@ -13,7 +13,6 @@ from continuity_break_detector.backtesting.ranking import latest_study_folder
 from continuity_break_detector.backtesting.study import STUDIES_DIR
 from continuity_break_detector.storage.parquet import read_parquet, write_parquet
 
-
 REVISION_ARTIFACT_HINTS = {
     2012: "possible global data revision or methodology artifact",
     2016: "possible global data revision or methodology artifact",
@@ -98,14 +97,8 @@ def build_data_artifact_audit(
     if representatives.empty:
         return _empty_artifact_frame()
 
-    audit_by_year = {
-        int(row["target_year"]): row
-        for row in candidate_audit.to_dict("records")
-    }
-    ranked_by_year = {
-        int(row["target_year"]): row
-        for row in representatives.to_dict("records")
-    }
+    audit_by_year = {int(row["target_year"]): row for row in candidate_audit.to_dict("records")}
+    ranked_by_year = {int(row["target_year"]): row for row in representatives.to_dict("records")}
     rows: list[dict[str, Any]] = []
     for candidate in representatives.to_dict("records"):
         target_year = int(candidate["target_year"])
@@ -170,10 +163,14 @@ def build_data_artifact_audit(
                 ),
             }
         )
-    return pd.DataFrame(rows).sort_values(
-        ["artifact_score", "rank_score"],
-        ascending=[False, False],
-    ).reset_index(drop=True)
+    return (
+        pd.DataFrame(rows)
+        .sort_values(
+            ["artifact_score", "rank_score"],
+            ascending=[False, False],
+        )
+        .reset_index(drop=True)
+    )
 
 
 def source_dominance(
@@ -380,10 +377,14 @@ def write_json(path: Path, payload: Any) -> None:
 def _top_by_verdict(df: pd.DataFrame, verdict: str, limit: int = 20) -> list[dict[str, Any]]:
     if df.empty:
         return []
-    top = df[df["artifact_verdict"] == verdict].sort_values(
-        ["artifact_score", "rank_score"],
-        ascending=[False, False],
-    ).head(limit)
+    top = (
+        df[df["artifact_verdict"] == verdict]
+        .sort_values(
+            ["artifact_score", "rank_score"],
+            ascending=[False, False],
+        )
+        .head(limit)
+    )
     return [_json_safe(record) for record in top.to_dict("records")]
 
 
@@ -472,4 +473,3 @@ def _empty_artifact_frame() -> pd.DataFrame:
             "notes",
         ]
     )
-

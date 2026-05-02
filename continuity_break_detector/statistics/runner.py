@@ -10,7 +10,6 @@ from continuity_break_detector.statistics.features import add_statistical_featur
 from continuity_break_detector.storage.parquet import read_parquet, write_parquet
 from continuity_break_detector.utils.paths import PROJECT_ROOT
 
-
 LOGGER = logging.getLogger(__name__)
 NORMALIZED_DIR = PROJECT_ROOT / "data" / "processed" / "normalized"
 STATISTICS_DIR = PROJECT_ROOT / "data" / "processed" / "statistics"
@@ -42,7 +41,9 @@ def run_statistics(
             if normalized.empty:
                 continue
             metric = str(normalized["metric"].iloc[0])
-            stats = add_break_scores(add_statistical_features(normalized, window=window), window=window)
+            stats = add_break_scores(
+                add_statistical_features(normalized, window=window), window=window
+            )
             output_path = output_dir / source_id / f"{input_path.stem}_statistics.parquet"
             write_parquet(stats, output_path)
             results.append(

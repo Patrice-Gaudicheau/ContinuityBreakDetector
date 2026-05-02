@@ -19,8 +19,8 @@ def main() -> int:
 
 def run_forecast(payload: dict[str, Any]) -> dict[str, Any]:
     import numpy as np
-    import torch
     import timesfm
+    import torch
 
     series = [float(value) for value in payload["series"]]
     horizon = int(payload["horizon"])
@@ -37,15 +37,17 @@ def run_forecast(payload: dict[str, Any]) -> dict[str, Any]:
         local_files_only=bool(params.get("local_files_only", True)),
         torch_compile=bool(params.get("torch_compile", False)),
     )
-    model.compile(timesfm.ForecastConfig(
-        max_context=int(params.get("max_context", 1024)),
-        max_horizon=max(horizon, int(params.get("max_horizon", horizon))),
-        normalize_inputs=bool(params.get("normalize_inputs", True)),
-        use_continuous_quantile_head=bool(params.get("use_continuous_quantile_head", True)),
-        force_flip_invariance=bool(params.get("force_flip_invariance", True)),
-        infer_is_positive=bool(params.get("infer_is_positive", True)),
-        fix_quantile_crossing=bool(params.get("fix_quantile_crossing", True)),
-    ))
+    model.compile(
+        timesfm.ForecastConfig(
+            max_context=int(params.get("max_context", 1024)),
+            max_horizon=max(horizon, int(params.get("max_horizon", horizon))),
+            normalize_inputs=bool(params.get("normalize_inputs", True)),
+            use_continuous_quantile_head=bool(params.get("use_continuous_quantile_head", True)),
+            force_flip_invariance=bool(params.get("force_flip_invariance", True)),
+            infer_is_positive=bool(params.get("infer_is_positive", True)),
+            fix_quantile_crossing=bool(params.get("fix_quantile_crossing", True)),
+        )
+    )
     point, quantiles = model.forecast(
         horizon=horizon,
         inputs=[np.asarray(series, dtype=float)],

@@ -18,7 +18,6 @@ from continuity_break_detector.backtesting.models import MODEL_NAMES
 from continuity_break_detector.storage.parquet import read_parquet, write_parquet
 from continuity_break_detector.utils.paths import PROJECT_ROOT, ensure_directory
 
-
 NORMALIZED_DIR = PROJECT_ROOT / "data" / "processed" / "normalized"
 STUDIES_DIR = PROJECT_ROOT / "studies" / "backtests"
 
@@ -79,20 +78,22 @@ def run_backtest_study(
     forecast_errors = (
         pd.concat(metric_frames, ignore_index=True)
         if metric_frames
-        else pd.DataFrame(columns=[
-            "source_id",
-            "metric",
-            "entity",
-            "model",
-            "cutoff_year",
-            "target_year",
-            "horizon",
-            "actual",
-            "predicted",
-            "absolute_error",
-            "relative_error",
-            "squared_error",
-        ])
+        else pd.DataFrame(
+            columns=[
+                "source_id",
+                "metric",
+                "entity",
+                "model",
+                "cutoff_year",
+                "target_year",
+                "horizon",
+                "actual",
+                "predicted",
+                "absolute_error",
+                "relative_error",
+                "squared_error",
+            ]
+        )
     )
     anomalies = build_anomalies(
         forecast_errors,
@@ -214,46 +215,48 @@ def build_markdown_report(summary: dict[str, Any], top_breaks: list[dict[str, An
     if not top_lines:
         top_lines = ["- No cross-domain break candidates met the anomaly threshold."]
 
-    return "\n".join([
-        "# Continuity Break Backtest Study",
-        "",
-        "## Objective",
-        "Identify historical periods where future yearly values became difficult to predict from prior observations using deterministic baseline models.",
-        "",
-        "## Method",
-        "The study uses rolling historical windows over normalized yearly time series. For each cutoff year, models are trained on prior data and evaluated against observed future values.",
-        "",
-        "## Models",
-        "- naive_last_value",
-        "- linear_trend",
-        "- exponential_trend",
-        "",
-        "## Parameters",
-        f"- train_window_years: {parameters['train_window_years']}",
-        f"- forecast_horizon_years: {parameters['forecast_horizon_years']}",
-        f"- minimum_series_length: {parameters['minimum_series_length']}",
-        f"- anomaly_window: {parameters['anomaly_window']}",
-        f"- anomaly_threshold: {parameters['anomaly_threshold']}",
-        "",
-        "## Data Sources Processed",
-        f"- metrics_processed: {summary['metrics_processed']}",
-        f"- forecast_error_rows: {summary['forecast_error_rows']}",
-        f"- anomaly_rows: {summary['anomaly_rows']}",
-        f"- cross_domain_break_rows: {summary['cross_domain_break_rows']}",
-        "",
-        "## Main Findings",
-        "Forecast-error anomalies identify years where simple deterministic historical baselines had unusually large errors compared with nearby prior errors.",
-        "",
-        "## Top Cross-Domain Break Candidates",
-        *top_lines,
-        "",
-        "## Limitations",
-        "These baselines are intentionally simple. Sparse series, reporting revisions, metric definitions, and source-specific coverage can affect forecast errors.",
-        "",
-        "## Conclusion",
-        "This study reports statistical discontinuity candidates only. It does not claim simulation results, proof of rapid influx, or causal interpretation.",
-        "",
-    ])
+    return "\n".join(
+        [
+            "# Continuity Break Backtest Study",
+            "",
+            "## Objective",
+            "Identify historical periods where future yearly values became difficult to predict from prior observations using deterministic baseline models.",
+            "",
+            "## Method",
+            "The study uses rolling historical windows over normalized yearly time series. For each cutoff year, models are trained on prior data and evaluated against observed future values.",
+            "",
+            "## Models",
+            "- naive_last_value",
+            "- linear_trend",
+            "- exponential_trend",
+            "",
+            "## Parameters",
+            f"- train_window_years: {parameters['train_window_years']}",
+            f"- forecast_horizon_years: {parameters['forecast_horizon_years']}",
+            f"- minimum_series_length: {parameters['minimum_series_length']}",
+            f"- anomaly_window: {parameters['anomaly_window']}",
+            f"- anomaly_threshold: {parameters['anomaly_threshold']}",
+            "",
+            "## Data Sources Processed",
+            f"- metrics_processed: {summary['metrics_processed']}",
+            f"- forecast_error_rows: {summary['forecast_error_rows']}",
+            f"- anomaly_rows: {summary['anomaly_rows']}",
+            f"- cross_domain_break_rows: {summary['cross_domain_break_rows']}",
+            "",
+            "## Main Findings",
+            "Forecast-error anomalies identify years where simple deterministic historical baselines had unusually large errors compared with nearby prior errors.",
+            "",
+            "## Top Cross-Domain Break Candidates",
+            *top_lines,
+            "",
+            "## Limitations",
+            "These baselines are intentionally simple. Sparse series, reporting revisions, metric definitions, and source-specific coverage can affect forecast errors.",
+            "",
+            "## Conclusion",
+            "This study reports statistical discontinuity candidates only. It does not claim simulation results, proof of rapid influx, or causal interpretation.",
+            "",
+        ]
+    )
 
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -298,4 +301,3 @@ def np_generic_types() -> tuple[type[Any], ...]:
     import numpy as np
 
     return (np.generic,)
-

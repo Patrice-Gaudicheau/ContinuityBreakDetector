@@ -4,7 +4,6 @@ from pathlib import Path
 
 from continuity_break_detector.backtesting.study import STUDIES_DIR
 
-
 VALID_STUDY_FILES = [
     "forecast_errors.parquet",
     "anomalies.parquet",
@@ -32,11 +31,7 @@ def latest_valid_study_folder(studies_dir: Path = STUDIES_DIR) -> Path:
     root = studies_dir.expanduser()
     if not root.exists():
         raise FileNotFoundError(f"Studies directory does not exist: {root}")
-    candidates = [
-        path
-        for path in root.iterdir()
-        if path.is_dir() and _is_valid_study(path)
-    ]
+    candidates = [path for path in root.iterdir() if path.is_dir() and _is_valid_study(path)]
     if not candidates:
         raise FileNotFoundError(f"No valid backtest study folders found under {root}")
     return max(candidates, key=lambda path: (path.stat().st_mtime, path.name))
@@ -54,4 +49,3 @@ def resolve_study_path(
 
 def _is_valid_study(path: Path) -> bool:
     return all((path / filename).exists() for filename in VALID_STUDY_FILES)
-

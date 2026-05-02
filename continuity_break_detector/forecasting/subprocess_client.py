@@ -10,7 +10,6 @@ from typing import Any
 from continuity_break_detector.forecasting.base import ForecastingError, ensure_forecast_length
 from continuity_break_detector.utils.paths import PROJECT_ROOT
 
-
 DEFAULT_TIMESFM_PYTHON = Path("~/projects/timesfm/.venv/bin/python")
 DEFAULT_CHRONOS_PYTHON = Path("~/projects/chronos-forecasting/.venv/bin/python")
 DEFAULT_TIMEOUT_SECONDS = 300.0
@@ -35,11 +34,15 @@ def chronos_python() -> Path:
 
 
 def timesfm_worker_path() -> Path:
-    return PROJECT_ROOT / "continuity_break_detector" / "forecasting" / "workers" / "timesfm_worker.py"
+    return (
+        PROJECT_ROOT / "continuity_break_detector" / "forecasting" / "workers" / "timesfm_worker.py"
+    )
 
 
 def chronos_worker_path() -> Path:
-    return PROJECT_ROOT / "continuity_break_detector" / "forecasting" / "workers" / "chronos_worker.py"
+    return (
+        PROJECT_ROOT / "continuity_break_detector" / "forecasting" / "workers" / "chronos_worker.py"
+    )
 
 
 def run_worker_forecast(

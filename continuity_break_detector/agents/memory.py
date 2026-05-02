@@ -5,7 +5,6 @@ from pathlib import Path
 
 from continuity_break_detector.utils.paths import PROJECT_ROOT, ensure_directory
 
-
 DEFAULT_DATABASE_PATH = PROJECT_ROOT / "data" / "processed" / "continuity_break_detector.sqlite"
 
 
@@ -116,4 +115,3 @@ def insert_agent_report(
                 confidence_level,
             ),
         )
-

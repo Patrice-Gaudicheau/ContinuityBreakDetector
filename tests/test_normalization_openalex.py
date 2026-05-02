@@ -18,4 +18,3 @@ def test_openalex_yearly_count_normalization_from_fixture() -> None:
             "entity": None,
         }
     ]
-

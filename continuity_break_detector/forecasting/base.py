@@ -23,11 +23,9 @@ class ForecasterAdapter(Protocol):
     forecaster_id: str
     display_name: str
 
-    def availability(self) -> ForecasterAvailability:
-        ...
+    def availability(self) -> ForecasterAvailability: ...
 
-    def forecast(self, series: pd.Series, horizon: int) -> list[float]:
-        ...
+    def forecast(self, series: pd.Series, horizon: int) -> list[float]: ...
 
 
 def ensure_forecast_length(
@@ -41,4 +39,3 @@ def ensure_forecast_length(
             f"{forecaster_id} returned {len(values)} values for horizon {horizon}"
         )
     return [float(value) for value in values]
-

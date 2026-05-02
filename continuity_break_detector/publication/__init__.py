@@ -1,2 +1,1 @@
 """Research paper drafting workflow."""
-

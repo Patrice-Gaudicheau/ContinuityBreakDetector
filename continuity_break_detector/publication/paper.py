@@ -5,16 +5,16 @@ import os
 import shutil
 import subprocess
 import tempfile
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import pandas as pd
 
 from continuity_break_detector.storage.parquet import read_parquet
 from continuity_break_detector.utils.paths import PROJECT_ROOT, ensure_directory
-
 
 PAPER_TITLE = "Detecting Cross-Domain Continuity Breaks in Long-Term Human Development Data"
 MODEL_LABEL = "gpt-5.5 medium"
@@ -223,13 +223,15 @@ def write_tables(snapshot: dict[str, Any], tables_dir: Path) -> None:
         if verdict == "verdict_counts":
             continue
         for item in items:
-            artifact_rows.append({
-                "category": verdict,
-                "target_year": item.get("target_year"),
-                "artifact_score": item.get("artifact_score"),
-                "artifact_verdict": item.get("artifact_verdict"),
-                "ordinary_explanation_hint": item.get("ordinary_explanation_hint"),
-            })
+            artifact_rows.append(
+                {
+                    "category": verdict,
+                    "target_year": item.get("target_year"),
+                    "artifact_score": item.get("artifact_score"),
+                    "artifact_verdict": item.get("artifact_verdict"),
+                    "ordinary_explanation_hint": item.get("ordinary_explanation_hint"),
+                }
+            )
     pd.DataFrame(artifact_rows).to_csv(tables_dir / "artifact_summary.csv", index=False)
     pd.DataFrame(snapshot["model_comparison"]).to_csv(
         tables_dir / "model_comparison.csv",
@@ -260,35 +262,37 @@ def build_writing_brief(snapshot: dict[str, Any]) -> str:
 
 
 def build_gpt_prompt(writing_brief: str) -> str:
-    return "\n".join([
-        "Write an academic-style research draft in English from the factual brief below.",
-        "",
-        f"Title: {PAPER_TITLE}",
-        "",
-        "Required sections:",
-        "1. Abstract",
-        "2. Introduction",
-        "3. Research Question",
-        "4. Data Sources",
-        "5. Methodology",
-        "6. Forecasting Backtest Design",
-        "7. Candidate Ranking and Artifact Filtering",
-        "8. Results",
-        "9. Discussion",
-        "10. Limitations",
-        "11. Conclusion",
-        "12. Future Work",
-        "",
-        "Use only the values in the brief. Do not invent statistics, causes, datasets, or model results.",
-        "Treat any prose excerpts as internal writing aids only; do not describe them as agents or model-generated analysis.",
-        "Use precise terminology: continuity break, structural break, cross-domain anomaly, forecast failure, data artifact, known real-world shock, unexplained synchronized break.",
-        "Do not assert metaphysical explanations, hidden external causes, or evidential certainty beyond the deterministic outputs.",
-        "The conclusion must state that the system detects known shocks and artifacts, but no unexplained synchronized cross-domain continuity break is identified.",
-        "Write in a cautious, academic, readable style with no first-person narration and no marketing tone.",
-        "",
-        "Factual writing brief:",
-        writing_brief,
-    ])
+    return "\n".join(
+        [
+            "Write an academic-style research draft in English from the factual brief below.",
+            "",
+            f"Title: {PAPER_TITLE}",
+            "",
+            "Required sections:",
+            "1. Abstract",
+            "2. Introduction",
+            "3. Research Question",
+            "4. Data Sources",
+            "5. Methodology",
+            "6. Forecasting Backtest Design",
+            "7. Candidate Ranking and Artifact Filtering",
+            "8. Results",
+            "9. Discussion",
+            "10. Limitations",
+            "11. Conclusion",
+            "12. Future Work",
+            "",
+            "Use only the values in the brief. Do not invent statistics, causes, datasets, or model results.",
+            "Treat any prose excerpts as internal writing aids only; do not describe them as agents or model-generated analysis.",
+            "Use precise terminology: continuity break, structural break, cross-domain anomaly, forecast failure, data artifact, known real-world shock, unexplained synchronized break.",
+            "Do not assert metaphysical explanations, hidden external causes, or evidential certainty beyond the deterministic outputs.",
+            "The conclusion must state that the system detects known shocks and artifacts, but no unexplained synchronized cross-domain continuity break is identified.",
+            "Write in a cautious, academic, readable style with no first-person narration and no marketing tone.",
+            "",
+            "Factual writing brief:",
+            writing_brief,
+        ]
+    )
 
 
 def default_gpt_command() -> list[str]:
@@ -304,7 +308,7 @@ def default_gpt_command() -> list[str]:
         "--model",
         "gpt-5.5",
         "-c",
-        "model_reasoning_effort=\"medium\"",
+        'model_reasoning_effort="medium"',
         "--sandbox",
         "read-only",
         "--ephemeral",

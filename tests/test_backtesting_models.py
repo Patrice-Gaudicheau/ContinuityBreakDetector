@@ -29,4 +29,3 @@ def test_exponential_trend_forecast_on_positive_data() -> None:
     forecast = exponential_trend(train, [2003])
 
     assert round(forecast[2003], 6) == 16.0
-

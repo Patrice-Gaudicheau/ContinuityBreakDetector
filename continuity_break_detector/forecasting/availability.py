@@ -3,12 +3,11 @@ from __future__ import annotations
 import importlib
 import os
 import sys
+from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
-from typing import Iterator
-
 
 DEFAULT_TIMESFM_LOCAL_PATH = Path("~/projects/timesfm").expanduser()
 DEFAULT_CHRONOS_LOCAL_PATH = Path("~/projects/chronos-forecasting").expanduser()

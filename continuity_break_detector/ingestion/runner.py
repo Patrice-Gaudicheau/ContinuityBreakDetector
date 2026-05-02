@@ -8,7 +8,6 @@ from pathlib import Path
 from continuity_break_detector.sources.base import RawStorage
 from continuity_break_detector.sources.registry import build_registry
 
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -76,4 +75,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

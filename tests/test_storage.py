@@ -32,4 +32,3 @@ def test_metadata_writer_creates_expected_json(tmp_path) -> None:  # type: ignor
     assert metadata["content_type"] == "application/json"
     assert metadata["documentation_url"] == "https://example.org/docs"
     assert metadata["raw_file"] == str(stored.raw_file)
-

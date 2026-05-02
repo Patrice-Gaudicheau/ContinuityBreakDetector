@@ -15,4 +15,3 @@ def test_prompt_builder_includes_safety_constraints() -> None:
     assert "Use only the provided study content." in combined
     assert "Prefer ordinary explanations." in combined
     assert "Explicitly mention uncertainty." in combined
-

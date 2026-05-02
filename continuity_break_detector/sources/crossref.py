@@ -12,9 +12,7 @@ class CrossrefConnector:
     source_id = "crossref"
     base_url = "https://api.crossref.org/v1"
     documentation_url = "https://www.crossref.org/documentation/retrieve-metadata/rest-api/"
-    rate_limit_policy = (
-        "Public: 5 req/s with concurrency 1; polite: 10 req/s with concurrency 3 when mailto is used."
-    )
+    rate_limit_policy = "Public: 5 req/s with concurrency 1; polite: 10 req/s with concurrency 3 when mailto is used."
     output_format = "json"
 
     def __init__(
@@ -36,10 +34,7 @@ class CrossrefConnector:
         url = f"{self.base_url}/works"
         params: dict[str, Any] = {
             "rows": self.rows,
-            "filter": (
-                f"from-created-date:{self.year}-01-01,"
-                f"until-created-date:{self.year}-12-31"
-            ),
+            "filter": (f"from-created-date:{self.year}-01-01,until-created-date:{self.year}-12-31"),
         }
         if self.mailto:
             params["mailto"] = self.mailto
@@ -59,4 +54,3 @@ class CrossrefConnector:
                 documentation_url=self.documentation_url,
             )
         ]
-

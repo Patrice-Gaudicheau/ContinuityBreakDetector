@@ -6,7 +6,6 @@ from xml.etree import ElementTree
 
 import pandas as pd
 
-
 SOURCE_ID = "arxiv"
 ATOM_NS = {"atom": "http://www.w3.org/2005/Atom"}
 

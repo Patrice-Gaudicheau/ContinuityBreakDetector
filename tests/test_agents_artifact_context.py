@@ -56,21 +56,29 @@ def test_low_artifact_risk_filtering() -> None:
 
 
 def test_artifact_vs_reality_classification() -> None:
-    assert classify_artifact_vs_reality(
-        {"target_year": 1848, "artifact_verdict": "likely_data_artifact"}
-    ) == "likely data artifact"
-    assert classify_artifact_vs_reality(
-        {
-            "target_year": 2016,
-            "artifact_verdict": "possible_data_artifact",
-            "revision_artifact_hint": "possible global data revision or methodology artifact",
-        }
-    ) == "likely data artifact"
-    assert classify_artifact_vs_reality(
-        {
-            "target_year": 2008,
-            "artifact_verdict": "low_artifact_risk",
-            "known_real_world_event": True,
-        }
-    ) == "confirmed real-world event"
-
+    assert (
+        classify_artifact_vs_reality(
+            {"target_year": 1848, "artifact_verdict": "likely_data_artifact"}
+        )
+        == "likely data artifact"
+    )
+    assert (
+        classify_artifact_vs_reality(
+            {
+                "target_year": 2016,
+                "artifact_verdict": "possible_data_artifact",
+                "revision_artifact_hint": "possible global data revision or methodology artifact",
+            }
+        )
+        == "likely data artifact"
+    )
+    assert (
+        classify_artifact_vs_reality(
+            {
+                "target_year": 2008,
+                "artifact_verdict": "low_artifact_risk",
+                "known_real_world_event": True,
+            }
+        )
+        == "confirmed real-world event"
+    )

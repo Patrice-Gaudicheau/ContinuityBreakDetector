@@ -67,4 +67,3 @@ def test_cross_domain_grouping() -> None:
     assert row["affected_domain_count"] == 2
     assert row["anomaly_count"] == 2
     assert row["aggregate_score"] == 3.5
-

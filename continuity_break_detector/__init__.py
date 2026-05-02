@@ -1,2 +1,1 @@
 """ContinuityBreakDetector source retrieval package."""
-

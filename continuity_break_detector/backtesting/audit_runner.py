@@ -4,8 +4,8 @@ import argparse
 from pathlib import Path
 
 from continuity_break_detector.backtesting.audit import AuditParameters, audit_study
-from continuity_break_detector.backtesting.study_discovery import resolve_study_path
 from continuity_break_detector.backtesting.study import STUDIES_DIR
+from continuity_break_detector.backtesting.study_discovery import resolve_study_path
 
 
 def main() -> int:

@@ -74,4 +74,3 @@ class OwidConnector:
 def build_owid_urls(slug: str) -> tuple[str, str]:
     base = f"https://ourworldindata.org/grapher/{slug}"
     return f"{base}.csv", f"{base}.metadata.json"
-

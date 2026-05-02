@@ -19,4 +19,3 @@ def classify_artifact_vs_reality(candidate: dict[str, Any]) -> str:
     if known_event and verdict == "low_artifact_risk":
         return "confirmed real-world event"
     return "unresolved"
-

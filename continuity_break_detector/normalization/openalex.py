@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pandas as pd
 
-
 SOURCE_ID = "openalex"
 
 
@@ -18,7 +17,9 @@ def normalize(raw_dir: Path, *, interpolate: bool = False) -> pd.DataFrame:
         year = _year_from_name(path.name)
         if year is None:
             continue
-        rows.extend(normalize_payload(json.loads(path.read_text(encoding="utf-8")), year).to_dict("records"))
+        rows.extend(
+            normalize_payload(json.loads(path.read_text(encoding="utf-8")), year).to_dict("records")
+        )
     return pd.DataFrame(rows, columns=["source_id", "metric", "year", "value", "unit", "entity"])
 
 
@@ -28,14 +29,18 @@ def normalize_payload(payload: dict[str, object], year: int) -> pd.DataFrame:
     if count is None:
         results = payload.get("results")
         count = len(results) if isinstance(results, list) else 0
-    return pd.DataFrame([{
-        "source_id": SOURCE_ID,
-        "metric": "works_count",
-        "year": year,
-        "value": float(count),
-        "unit": "works",
-        "entity": None,
-    }])
+    return pd.DataFrame(
+        [
+            {
+                "source_id": SOURCE_ID,
+                "metric": "works_count",
+                "year": year,
+                "value": float(count),
+                "unit": "works",
+                "entity": None,
+            }
+        ]
+    )
 
 
 def log_missing_years(df: pd.DataFrame) -> int:

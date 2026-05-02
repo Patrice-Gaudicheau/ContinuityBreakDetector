@@ -9,7 +9,6 @@ from continuity_break_detector.sources.openalex import OpenAlexConnector
 from continuity_break_detector.sources.owid import OwidConnector
 from continuity_break_detector.sources.world_bank import WorldBankConnector
 
-
 IMPLEMENTED_SOURCE_IDS = (
     "world_bank_wdi",
     "openalex",
@@ -50,4 +49,3 @@ def build_registry() -> SourceRegistry:
         implemented={connector.source_id: connector for connector in connectors},
         not_implemented=dict(NOT_IMPLEMENTED_SOURCE_IDS),
     )
-

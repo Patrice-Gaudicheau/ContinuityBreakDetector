@@ -55,4 +55,3 @@ class ArxivConnector:
                 documentation_url=self.documentation_url,
             )
         ]
-

@@ -67,9 +67,7 @@ def test_reasoning_content_only_triggers_retry(monkeypatch) -> None:  # type: ig
 
 def test_reasoning_content_only_fails_after_retry(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     def fake_post(*_args, **_kwargs):  # type: ignore[no-untyped-def]
-        return _json_response(
-            {"choices": [{"message": {"reasoning_content": "hidden reasoning"}}]}
-        )
+        return _json_response({"choices": [{"message": {"reasoning_content": "hidden reasoning"}}]})
 
     monkeypatch.setattr(httpx, "post", fake_post)
     client = LemonadeClient(base_url="http://localhost:8000/v1")

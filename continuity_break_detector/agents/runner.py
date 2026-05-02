@@ -16,11 +16,14 @@ from continuity_break_detector.agents.memory import (
     insert_agent_run,
     update_agent_run_status,
 )
-from continuity_break_detector.agents.prompts import AGENT_ORDER, build_agent_prompt, build_router_prompt
+from continuity_break_detector.agents.prompts import (
+    AGENT_ORDER,
+    build_agent_prompt,
+    build_router_prompt,
+)
 from continuity_break_detector.backtesting.study import STUDIES_DIR
 from continuity_break_detector.backtesting.study_discovery import resolve_study_path
 from continuity_break_detector.utils.paths import ensure_directory
-
 
 REQUIRED_INPUT_FILES = [
     "data_artifact_audit.json",
@@ -449,7 +452,9 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        selected_study = resolve_study_path(study_path=args.study_path, studies_dir=args.studies_dir)
+        selected_study = resolve_study_path(
+            study_path=args.study_path, studies_dir=args.studies_dir
+        )
         result = analyze_study(
             selected_study,
             database_path=args.database_path,

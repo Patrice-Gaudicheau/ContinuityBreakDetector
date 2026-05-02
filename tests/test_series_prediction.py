@@ -12,6 +12,7 @@ from continuity_break_detector.series_prediction import (
     SeriesPredictionError,
     build_error_response,
     build_success_response,
+    forecast_client_for_mode,
     load_series_input,
     predict_series_with_worker,
 )
@@ -117,6 +118,7 @@ def test_build_success_response_shape() -> None:
     assert response == {
         "status": "ok",
         "worker": "chronos",
+        "mode": "one-shot",
         "input": {"points": 2, "metadata": {"name": "demo"}},
         "prediction": {
             "model_id": "amazon/chronos-bolt-small",
@@ -136,7 +138,7 @@ def test_build_error_response_shape() -> None:
 def test_predict_series_cli_success(monkeypatch, tmp_path: Path, capsys) -> None:
     path = write_json(tmp_path / "series.json", {"series": [1, 2], "metadata": {"name": "demo"}})
 
-    def fake_predict(worker, series, horizon, timeout_seconds=120.0):
+    def fake_predict(worker, series, horizon, timeout_seconds=120.0, client=None):
         return ForecastResult(
             worker=worker,
             model_id="model",
@@ -148,6 +150,7 @@ def test_predict_series_cli_success(monkeypatch, tmp_path: Path, capsys) -> None
             succeeded=True,
         )
 
+    monkeypatch.setattr(series_prediction_runner, "forecast_client_for_mode", lambda mode: object())
     monkeypatch.setattr(series_prediction_runner, "predict_series_with_worker", fake_predict)
     monkeypatch.setattr(
         "sys.argv",
@@ -167,8 +170,92 @@ def test_predict_series_cli_success(monkeypatch, tmp_path: Path, capsys) -> None
     output = json.loads(captured.out)
 
     assert output["status"] == "ok"
+    assert output["mode"] == "one-shot"
     assert output["prediction"]["forecast"] == [3.0]
     assert "worker log" in captured.err
+
+
+def test_predict_series_cli_daemon_mode_uses_selected_client(
+    monkeypatch, tmp_path: Path, capsys
+) -> None:
+    path = write_json(tmp_path / "series.json", {"series": [1, 2], "metadata": {"name": "demo"}})
+    calls = []
+
+    class FakeClient:
+        def close(self) -> None:
+            calls.append(("close",))
+
+    def fake_factory(mode):
+        calls.append(("factory", mode))
+        return FakeClient()
+
+    def fake_predict(worker, series, horizon, timeout_seconds=120.0, client=None):
+        calls.append(("predict", worker, series, horizon, timeout_seconds, type(client).__name__))
+        return ForecastResult(
+            worker=worker,
+            model_id="model",
+            horizon=horizon,
+            forecast=[3.0],
+            raw_stdout="",
+            raw_stderr="",
+            returncode=0,
+            succeeded=True,
+        )
+
+    monkeypatch.setattr(series_prediction_runner, "forecast_client_for_mode", fake_factory)
+    monkeypatch.setattr(series_prediction_runner, "predict_series_with_worker", fake_predict)
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "cbd",
+            "--worker",
+            "timesfm",
+            "--input",
+            str(path),
+            "--horizon",
+            "1",
+            "--mode",
+            "daemon",
+        ],
+    )
+
+    assert series_prediction_runner.main() == 0
+    output = json.loads(capsys.readouterr().out)
+
+    assert output["mode"] == "daemon"
+    assert ("factory", "daemon") in calls
+    assert ("predict", "timesfm", [1.0, 2.0], 1, 120.0, "FakeClient") in calls
+    assert ("close",) in calls
+
+
+def test_predict_series_cli_rejects_invalid_mode(monkeypatch, tmp_path: Path, capsys) -> None:
+    path = write_json(tmp_path / "series.json", {"series": [1, 2]})
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "cbd",
+            "--worker",
+            "timesfm",
+            "--input",
+            str(path),
+            "--horizon",
+            "1",
+            "--mode",
+            "bad",
+        ],
+    )
+
+    assert series_prediction_runner.main() == 2
+    output = json.loads(capsys.readouterr().out)
+
+    assert output["status"] == "error"
+    assert output["error"]["type"] == "validation_error"
+    assert "mode must be one of" in output["error"]["message"]
+
+
+def test_forecast_client_for_mode_rejects_invalid_mode() -> None:
+    with pytest.raises(SeriesPredictionError, match="mode must be one of"):
+        forecast_client_for_mode("bad")
 
 
 def test_predict_series_cli_error(monkeypatch, tmp_path: Path, capsys) -> None:

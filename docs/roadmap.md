@@ -26,18 +26,18 @@ continuity-break detector. It is not a product roadmap.
 
 - The default Docker backend still starts an ephemeral container for each
   prediction command.
-- `predict-series` and `analyze-series` still use one-shot prediction.
-- Daemon mode is available only through the experimental CLI/client path.
+- `predict-series` and `analyze-series` default to one-shot prediction.
+- Daemon mode is explicit opt-in through `--mode daemon`.
 - Worker logs include upstream library warnings and download progress on stderr.
 - Only the prediction contract is centralized; model-specific loading remains in
   each worker script.
 
 ## Next Step: Batch/Backtest Integration
 
-The warm-worker daemon exists, but normal pipeline commands do not use it yet.
-The next step is to integrate daemon-backed forecasting into batch and backtest
-workloads where many predictions are made in one run. Reusing a loaded model
-should reduce repeated:
+The warm-worker daemon exists and pipeline-level single-series commands can opt
+into it. The next step is to integrate daemon-backed forecasting into batch and
+backtest workloads where many predictions are made in one run. Reusing a loaded
+model should reduce repeated:
 
 - Docker container startup
 - Python interpreter startup

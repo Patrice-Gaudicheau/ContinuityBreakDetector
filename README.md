@@ -4,6 +4,8 @@
 
 ContinuityBreakDetector is a deterministic-first pipeline for finding candidate continuity breaks in long-term public time-series data. It ingests source data, normalizes it into yearly series, computes transparent statistical signals, runs historical backtests, ranks cross-domain anomalies, audits likely causes, and filters data artifacts before any optional ML or LLM interpretation is used.
 
+This repository is primarily an engineering project. The article provides context and results, not the implementation.
+
 ## Architecture
 
 ```mermaid
@@ -135,6 +137,14 @@ Long-run public datasets contain real shocks, methodology changes, sparse histor
 ContinuityBreakDetector shows how to structure this kind of analysis so claims remain inspectable: deterministic computation first, artifact review before interpretation, optional ML/LLM layers kept outside the core method, and reproducible artifacts at every step.
 
 The current conclusion is cautious: the pipeline detects known real-world shocks and likely data artifacts, but does not claim causal proof or an unexplained synchronized cross-domain break.
+
+## Related Article
+
+A detailed write-up of the analysis behind this project is available here:
+
+- [docs/article_continuity_breaks.md](docs/article_continuity_breaks.md)
+
+This article focuses on the data analysis and results, while this repository focuses on the implementation and pipeline design.
 
 ## Limitations
 

@@ -1,0 +1,22 @@
+services:
+  core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: continuity-break-detector:core
+
+  timesfm-worker:
+    build:
+      context: .
+      dockerfile: docker/timesfm/Dockerfile
+    image: continuity-break-detector:timesfm-worker
+    environment:
+      CBD_TIMESFM_PYTHON: /usr/local/bin/python
+
+  chronos-worker:
+    build:
+      context: .
+      dockerfile: docker/chronos/Dockerfile
+    image: continuity-break-detector:chronos-worker
+    environment:
+      CBD_CHRONOS_PYTHON: /usr/local/bin/python

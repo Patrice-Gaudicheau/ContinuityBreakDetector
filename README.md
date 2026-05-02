@@ -3,18 +3,17 @@
 [![CI](https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/actions/workflows/test.yml/badge.svg)](https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/actions/workflows/test.yml)
 [![Coverage](https://img.shields.io/badge/coverage-CI%20artifact-informational)](https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/actions/workflows/test.yml)
 
-ContinuityBreakDetector is a deterministic-first pipeline for finding continuity
-break candidates in long-run public time series. It combines source ingestion,
-normalization, statistical feature generation, rolling backtests, candidate
-ranking, and artifact review into an inspectable local workflow.
+ContinuityBreakDetector is not a typical anomaly detector.
 
-The core project is intentionally ML-free. Optional TimesFM and Chronos
-forecasting runs are available through isolated Docker workers, but the
-statistical detector, demo study, tests, and publication artifacts do not depend
-on those model packages.
+It is a deterministic analysis pipeline followed by a structured AI review layer, built around a simple idea: AI as reviewer, not as decision maker.
 
-This repository is primarily an engineering project. The article provides
-context and results, not the implementation.
+It ingests long-run public time series, computes statistical features, runs rolling backtests, ranks candidate continuity breaks, and filters likely artifacts. All these stages are deterministic, reproducible, and fully inspectable.
+
+The system does not rely on AI for detection. LLMs are introduced only after the analytical pipeline, where they interpret, challenge, and contextualize the results through a set of specialized agents: source auditor, statistical reviewer, domain_interpreter, skeptic, and synthesis.
+
+This design separates computation from interpretation. The pipeline produces evidence. The agents behave like a committee of reviewers.
+
+The core project remains intentionally lightweight. Optional TimesFM and Chronos forecasting runs are isolated in Docker workers, and optional LLM analysis runs through a Lemonade-compatible endpoint.
 
 ## Architecture
 
@@ -42,18 +41,23 @@ For design details, see [ARCHITECTURE.md](ARCHITECTURE.md) and the
 
 ## Key Idea
 
-The scientific path is deterministic through artifact filtering. Optional TimesFM, Chronos, and Lemonade components can add forecasting or interpretation, but they do not replace the auditable core.
+The system is built around a strict two-layer architecture.
 
-Every major stage writes local artifacts and metadata so a reviewer can inspect what happened:
+The first layer is deterministic. It produces evidence: forecast errors, ranked
+candidates, audit scores, artifact flags, and reproducibility metadata.
 
-- raw retrieval metadata
-- normalized Parquet time series
-- statistical features
-- forecast errors
-- ranked break candidates
-- candidate audits
-- data artifact audits
-- reproducibility metadata
+The second layer is interpretative. A structured set of agents reads those
+artifacts and produces a critical review.
+
+The domain_interpreter is a key component of this layer. Its role is to connect
+statistically detected breaks to plausible real-world context, economic,
+demographic, or scientific, without overriding the underlying evidence.
+
+The skeptic agent plays an equally important role by actively rejecting false
+positives and favoring ordinary explanations over speculative ones.
+
+Together, these agents form a constrained interpretation system rather than a
+generative one.
 
 ## Quick Demo
 

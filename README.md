@@ -1,6 +1,6 @@
 # ContinuityBreakDetector
 
-[![CI](https://github.com/<OWNER>/ContinuityBreakDetector/actions/workflows/test.yml/badge.svg)](https://github.com/<OWNER>/ContinuityBreakDetector/actions/workflows/test.yml)
+[![CI](https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/actions/workflows/test.yml/badge.svg)](https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/actions/workflows/test.yml)
 
 ContinuityBreakDetector is a deterministic-first research pipeline for finding
 candidate continuity breaks in long-term public time-series data. It retrieves

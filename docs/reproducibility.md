@@ -13,12 +13,17 @@ source .venv/bin/activate
 python -m pip install -e '.[test]'
 ```
 
-Optional local forecasters require separate TimesFM and Chronos environments:
+Optional ML worker forecasts require Docker Compose. The worker images keep
+TimesFM, Chronos, and Torch outside the core Python environment:
 
 ```bash
-export CBD_TIMESFM_PYTHON="$HOME/projects/timesfm/.venv/bin/python"
-export CBD_CHRONOS_PYTHON="$HOME/projects/chronos-forecasting/.venv/bin/python"
+docker compose build
+python -m continuity_break_detector.main ml-smoke
 ```
+
+The first full model smoke test or prediction may download model weights at
+runtime into the shared `hf_cache` Docker volume. No model weights are downloaded
+during image build.
 
 Optional local LLM analysis requires a Lemonade-compatible endpoint:
 
@@ -63,4 +68,3 @@ pytest -q
 - model caches and checkpoints
 - virtual environments
 - local environment files
-

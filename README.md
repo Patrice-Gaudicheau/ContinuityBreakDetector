@@ -2,13 +2,26 @@
 
 [![CI](https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/actions/workflows/test.yml/badge.svg)](https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/actions/workflows/test.yml)
 
-ContinuityBreakDetector is a deterministic-first pipeline to detect structural breaks in global development data.
+ContinuityBreakDetector is a deterministic-first pipeline for finding continuity
+break candidates in long-run public time series. It combines source ingestion,
+normalization, statistical feature generation, rolling backtests, candidate
+ranking, and artifact review into an inspectable local workflow.
 
-It is designed to distinguish real-world shocks from data artifacts using reproducible, auditable methods.
+The core project is intentionally ML-free. Optional TimesFM and Chronos
+forecasting runs are available through isolated Docker workers, but the
+statistical detector, demo study, tests, and publication artifacts do not depend
+on those model packages.
 
-This repository is primarily an engineering project. The article provides context and results, not the implementation.
+This repository is primarily an engineering project. The article provides
+context and results, not the implementation.
 
 ## Architecture
+
+```text
+public data -> deterministic core -> audit artifacts -> reports
+                                  \
+                                   -> optional ForecastClient -> Docker ML workers
+```
 
 ```mermaid
 flowchart LR
@@ -17,12 +30,22 @@ flowchart LR
     ING --> NORM["Normalization (Parquet)"]
     NORM --> STATS["Statistics<br/>deterministic core"]
     STATS --> BACKTEST["Backtesting Engine<br/>deterministic core"]
-    BACKTEST --> FORECAST["Forecasting<br/>Deterministic + TimesFM + Chronos<br/>subprocess ML models"]
+    BACKTEST --> FORECAST["Forecasting<br/>deterministic core + optional ML"]
     FORECAST --> RANK["Ranking"]
     RANK --> AUDIT["Audit"]
     AUDIT --> ARTIFACT["Artifact Detection"]
-    ARTIFACT --> LLM["Optional LLM Analysis<br/>Lemonade optional LLM layer"]
+    ARTIFACT --> LLM["Optional LLM Analysis<br/>Lemonade-compatible endpoint"]
     LLM --> PUB["Publication outputs"]
+```
+
+The ML path is a side path, not a dependency of the detector:
+
+```text
+core CLI
+  -> ForecastClient
+  -> DockerForecastClient
+  -> docker compose run --rm -T <worker> python predict.py
+  -> JSON stdout parsed with continuity_break_detector.prediction_schema
 ```
 
 ## Key Idea
@@ -69,11 +92,14 @@ Run the test suite inside Docker:
 docker run --rm continuity-break-detector:core
 ```
 
-This container is intentionally lightweight and installs the project with its test dependencies only. It does not containerize the optional TimesFM or Chronos worker environments.
+This container is intentionally lightweight and installs the project with its
+test dependencies only. It does not contain TimesFM, Chronos, model weights, or
+GPU requirements.
 
 ## Optional ML Worker Containers
 
-The Docker Compose setup keeps the deterministic core image separate from experimental ML worker images:
+The Docker Compose setup keeps the deterministic core image separate from
+optional ML worker images:
 
 - `core` reuses the lightweight `python:3.12-slim` project Dockerfile and runs the existing test command by default.
 - `timesfm-worker` uses its own `python:3.11-slim` image with the TimesFM environment.
@@ -110,7 +136,8 @@ CBD_RUN_ML_MODEL_SMOKE=1 docker compose run --rm timesfm-worker python smoke_tes
 CBD_RUN_ML_MODEL_SMOKE=1 docker compose run --rm chronos-worker python smoke_test.py
 ```
 
-The ML worker containers are optional and experimental. They prepare isolated CPU Python environments and do not download model weights during build.
+The ML worker containers are optional. They prepare isolated CPU Python
+environments and do not download model weights during build.
 
 The core CLI can invoke the same isolated worker smoke tests without installing ML
 dependencies in the core environment:
@@ -159,6 +186,12 @@ The request and response contract is centralized in
 `predict.py` scripts, and pipeline commands share those validation helpers so
 the JSON stdin/stdout shape stays consistent across backends.
 
+More detail:
+
+- [docs/ml_architecture.md](docs/ml_architecture.md)
+- [docs/worker_contract.md](docs/worker_contract.md)
+- [docs/roadmap.md](docs/roadmap.md)
+
 Docker Compose mounts a shared named volume, `hf_cache`, at
 `/root/.cache/huggingface` in both ML worker containers. The first full smoke or
 prediction run downloads model weights into that volume at runtime; later runs
@@ -203,6 +236,27 @@ python -m continuity_break_detector.main analyze-series --worker chronos --input
 This command returns the forecast and a compact continuity-break analysis in one
 JSON object. The ML models remain optional Docker-backed components, and the
 first run may populate the Hugging Face cache volume.
+
+## Command Dependencies
+
+Commands that do not require Docker or ML packages:
+
+- `make demo-study`
+- `pytest -q`
+- deterministic pipeline commands such as `ingest`, `normalize`,
+  `compute_statistics`, `rank_breaks`, `audit_candidates`, and
+  `detect_artifacts`
+
+Commands that require Docker when using the current ML backend:
+
+- `ml-smoke`
+- `ml-predict`
+- `predict-series`
+- `analyze-series`
+- direct `docker compose run ... predict.py` worker calls
+
+Full model smoke tests and first prediction runs may populate the Hugging Face
+cache volume. Regular deterministic workflows do not.
 
 ## Pipeline Overview
 
@@ -249,8 +303,8 @@ The advanced components are optional and isolated from the deterministic core.
 
 | Component | Role | Isolation |
 | --- | --- | --- |
-| TimesFM | Neural time-series forecasting | Subprocess worker via `CBD_TIMESFM_PYTHON` |
-| Chronos | Probabilistic time-series forecasting | Subprocess worker via `CBD_CHRONOS_PYTHON` |
+| TimesFM | Neural time-series forecasting | Docker worker via `timesfm-worker` |
+| Chronos | Probabilistic time-series forecasting | Docker worker via `chronos-worker` |
 | Lemonade | Local LLM interpretation reports | OpenAI-compatible local HTTP endpoint |
 
 If an optional model is unavailable, the deterministic pipeline still runs.
@@ -301,7 +355,8 @@ This article focuses on the data analysis and results, while this repository foc
 
 - The pipeline identifies statistical candidates, not causes.
 - Artifact filtering assigns risk indicators, not definitive labels.
-- Optional TimesFM and Chronos runs require separate local model environments.
+- Optional TimesFM and Chronos runs require Docker and may download model weights
+  into the Hugging Face cache volume at runtime.
 - Optional Lemonade reports are interpretive aids, not scientific evidence.
 - Public API schemas, coverage, and rate limits can change.
 - Broader claims require more data sources, source-level validation, and independent replication.

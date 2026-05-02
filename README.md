@@ -57,9 +57,9 @@ studies/demo_study/
 - **Normalization**: converts source-specific payloads into a common yearly schema.
 - **Statistics**: computes growth, log growth, acceleration, rolling z-scores, and break scores.
 - **Backtesting**: evaluates whether future values became difficult to predict from prior windows.
-- **Ranking**: groups anomalies into cross-domain candidate break years.
+- **Ranking**: groups anomalies into cross-domain candidate break years using heuristic weights documented in [docs/scoring.md](docs/scoring.md).
 - **Audit**: checks robustness, model agreement, source coverage, sparsity, and known explanations.
-- **Artifact detection**: flags likely data artifacts, source dominance, extreme statistical values, and model echoes.
+- **Artifact detection**: flags likely data artifacts, source dominance, extreme statistical values, and model echoes using heuristic scoring subject to tuning.
 - **Publication outputs**: produces compact reports and optional draft material from deterministic results.
 
 ## Features
@@ -69,7 +69,7 @@ studies/demo_study/
 - Optional local LLM interpretation through a Lemonade-compatible endpoint
 - File-based, inspectable pipeline using Parquet and JSON artifacts
 - CLI entrypoint: `cbd`
-- CI with Ruff and pytest
+- CI with Ruff, mypy, and pytest
 - 60+ tests covering normalization, statistics, backtesting, ranking, audit, artifacts, forecasting adapters, and publication helpers
 - No committed raw data, generated studies, secrets, model checkpoints, or local caches
 

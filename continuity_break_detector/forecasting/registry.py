@@ -27,13 +27,11 @@ class ForecasterRegistry:
 
 
 def build_forecaster_registry() -> ForecasterRegistry:
-    return ForecasterRegistry(
-        [
-            *deterministic_adapters(),
-            TimesFMAdapter(),
-            ChronosAdapter(),
-        ]
-    )
+    forecasters: list[ForecasterAdapter] = []
+    forecasters.extend(deterministic_adapters())
+    forecasters.append(TimesFMAdapter())
+    forecasters.append(ChronosAdapter())
+    return ForecasterRegistry(forecasters)
 
 
 def deterministic_forecaster_ids() -> set[str]:

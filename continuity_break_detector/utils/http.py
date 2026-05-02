@@ -27,7 +27,7 @@ class HttpClient:
     ) -> None:
         if mailto:
             user_agent = f"{user_agent} (mailto:{mailto})"
-        self.retries = retries
+        self.max_attempts = max(1, retries)
         self.backoff_factor = backoff_factor
         self.min_interval_seconds = min_interval_seconds
         self._last_request_at = 0.0
@@ -58,7 +58,7 @@ class HttpClient:
     ) -> httpx.Response:
         self._sleep_if_needed()
         last_error: Exception | None = None
-        for attempt in range(self.retries + 1):
+        for attempt in range(self.max_attempts):
             try:
                 response = self._client.get(url, params=params, headers=headers)
                 if response.status_code < 500 and response.status_code != 429:
@@ -67,13 +67,13 @@ class HttpClient:
                 return response
             except (httpx.HTTPError, httpx.TimeoutException) as exc:
                 last_error = exc
-                if attempt >= self.retries:
+                if attempt >= self.max_attempts - 1:
                     break
                 sleep_seconds = self.backoff_factor * (2**attempt)
                 LOGGER.warning(
                     "GET retry %s/%s for %s after %s",
                     attempt + 1,
-                    self.retries,
+                    self.max_attempts,
                     url,
                     exc,
                 )

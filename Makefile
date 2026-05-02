@@ -1,4 +1,4 @@
-.PHONY: test lint lint-basic format-check typecheck-basic quality clean-generated run-demo demo-study
+.PHONY: test lint lint-basic format-check typecheck typecheck-basic quality clean-generated run-demo demo-study
 
 test:
 	python -m py_compile $$(find . -name "*.py")
@@ -20,9 +20,13 @@ typecheck-basic:
 		echo "mypy is not installed; skipping typecheck-basic"; \
 	fi
 
+typecheck:
+	mypy continuity_break_detector
+
 quality:
 	python -m py_compile $$(find . -name "*.py")
 	ruff check .
+	mypy continuity_break_detector
 	pytest -q
 
 clean-generated:

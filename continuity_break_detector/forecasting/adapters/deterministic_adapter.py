@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 from continuity_break_detector.forecasting.base import (
+    ForecasterAdapter,
     ForecasterAvailability,
     ForecastingError,
     ensure_forecast_length,
@@ -50,7 +51,7 @@ class DeterministicAdapter:
         )
 
 
-def deterministic_adapters() -> list[DeterministicAdapter]:
+def deterministic_adapters() -> list[ForecasterAdapter]:
     return [
         DeterministicAdapter("naive_last_value", "naive_last_value"),
         DeterministicAdapter("linear_trend", "linear_trend"),

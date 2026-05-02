@@ -32,5 +32,8 @@ jobs:
       - name: Run Ruff
         run: ruff check .
 
+      - name: Run mypy
+        run: mypy continuity_break_detector
+
       - name: Run tests
         run: pytest -q

@@ -20,8 +20,11 @@ class ForecasterAvailability:
 
 
 class ForecasterAdapter(Protocol):
-    forecaster_id: str
-    display_name: str
+    @property
+    def forecaster_id(self) -> str: ...
+
+    @property
+    def display_name(self) -> str: ...
 
     def availability(self) -> ForecasterAvailability: ...
 

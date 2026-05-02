@@ -41,14 +41,9 @@ def main() -> int:
         print(json.dumps(build_error_response(exc.error_type, exc.message), separators=(",", ":")))
         return 2 if exc.error_type == "validation_error" else 1
 
-    if result.prediction.stderr.strip():
-        print(result.prediction.stderr.strip(), file=sys.stderr)
+    if result.prediction.raw_stderr.strip():
+        print(result.prediction.raw_stderr.strip(), file=sys.stderr)
 
-    model_id = None
-    if result.prediction.response is not None:
-        raw_model_id = result.prediction.response.get("model_id")
-        if isinstance(raw_model_id, str):
-            model_id = raw_model_id
     response = {
         "status": "ok",
         "worker": result.worker,
@@ -57,7 +52,7 @@ def main() -> int:
             "metadata": result.series_input.metadata,
         },
         "prediction": {
-            "model_id": model_id,
+            "model_id": result.prediction.model_id,
             "horizon": args.horizon,
             "forecast": result.prediction.forecast,
         },

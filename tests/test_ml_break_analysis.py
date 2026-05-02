@@ -7,13 +7,13 @@ import pandas as pd
 import pytest
 
 from continuity_break_detector import ml_break_analysis_runner
+from continuity_break_detector.forecast_client import ForecastResult
 from continuity_break_detector.ml_break_analysis import (
     analyze_combined_series,
     analyze_prediction_result,
     combined_series_frame,
     validate_forecast,
 )
-from continuity_break_detector.ml_workers import WorkerPredictionResult
 from continuity_break_detector.series_prediction import SeriesInput, SeriesPredictionError
 
 
@@ -22,18 +22,18 @@ def prediction_result(
     worker: str = "timesfm",
     forecast: list[float] | None = None,
     stderr: str = "",
-) -> WorkerPredictionResult:
+) -> ForecastResult:
     forecast = [5.0, 6.0] if forecast is None else forecast
-    return WorkerPredictionResult(
-        worker_name=worker,
-        command=[],
+    return ForecastResult(
+        worker=worker,
+        model_id="model",
+        horizon=len(forecast),
+        forecast=forecast,
+        raw_stdout="",
+        raw_stderr=stderr,
         returncode=0,
-        stdout="",
-        stderr=stderr,
         succeeded=True,
         response={"worker": worker, "model_id": "model", "horizon": len(forecast), "forecast": forecast},
-        forecast=forecast,
-        error=None,
     )
 
 

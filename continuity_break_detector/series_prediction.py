@@ -6,10 +6,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from continuity_break_detector.ml_workers import (
-    WorkerPredictionResult,
-    predict_chronos,
-    predict_timesfm,
+from continuity_break_detector.forecast_client import (
+    ForecastClient,
+    ForecastResult,
+    default_forecast_client,
 )
 
 
@@ -51,28 +51,24 @@ def predict_series_with_worker(
     series: list[float],
     horizon: int,
     timeout_seconds: float = 120.0,
-) -> WorkerPredictionResult:
+    client: ForecastClient | None = None,
+) -> ForecastResult:
     if horizon <= 0:
         raise SeriesPredictionError("validation_error", "horizon must be a positive integer")
-    if worker == "timesfm":
-        return predict_timesfm(series, horizon, timeout_seconds=timeout_seconds)
-    if worker == "chronos":
-        return predict_chronos(series, horizon, timeout_seconds=timeout_seconds)
-    raise SeriesPredictionError("validation_error", "worker must be one of: timesfm, chronos")
+    forecast_client = client or default_forecast_client()
+    try:
+        return forecast_client.predict(worker, series, horizon, timeout_seconds=timeout_seconds)
+    except ValueError as exc:
+        raise SeriesPredictionError("validation_error", str(exc)) from exc
 
 
 def build_success_response(
     *,
     worker: str,
     series_input: SeriesInput,
-    prediction: WorkerPredictionResult,
+    prediction: ForecastResult,
     horizon: int,
 ) -> dict[str, Any]:
-    model_id = None
-    if prediction.response is not None:
-        raw_model_id = prediction.response.get("model_id")
-        if isinstance(raw_model_id, str):
-            model_id = raw_model_id
     return {
         "status": "ok",
         "worker": worker,
@@ -81,7 +77,7 @@ def build_success_response(
             "metadata": series_input.metadata,
         },
         "prediction": {
-            "model_id": model_id,
+            "model_id": prediction.model_id,
             "horizon": horizon,
             "forecast": prediction.forecast,
         },

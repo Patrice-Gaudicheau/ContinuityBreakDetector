@@ -7,7 +7,7 @@ from typing import Any
 import pandas as pd
 
 from continuity_break_detector.config import ROLLING_STATISTICS_WINDOW
-from continuity_break_detector.ml_workers import WorkerPredictionResult
+from continuity_break_detector.forecast_client import ForecastResult
 from continuity_break_detector.series_prediction import (
     SeriesInput,
     SeriesPredictionError,
@@ -20,7 +20,7 @@ from continuity_break_detector.statistics.breaks import detect_break_candidates
 class BreakAnalysisResult:
     worker: str
     series_input: SeriesInput
-    prediction: WorkerPredictionResult
+    prediction: ForecastResult
     analysis: dict[str, Any]
 
 
@@ -56,7 +56,7 @@ def analyze_prediction_result(
     *,
     worker: str,
     series_input: SeriesInput,
-    prediction: WorkerPredictionResult,
+    prediction: ForecastResult,
 ) -> BreakAnalysisResult:
     if not prediction.succeeded:
         raise SeriesPredictionError("worker_error", prediction.error or "worker prediction failed")

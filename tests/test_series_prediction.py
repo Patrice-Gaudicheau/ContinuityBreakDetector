@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from continuity_break_detector import series_prediction_runner
-from continuity_break_detector.ml_workers import WorkerPredictionResult
+from continuity_break_detector.forecast_client import ForecastResult
 from continuity_break_detector.series_prediction import (
     SeriesInput,
     SeriesPredictionError,
@@ -69,47 +69,47 @@ def test_reject_invalid_horizon() -> None:
 def test_predict_series_dispatches_to_worker(monkeypatch) -> None:
     calls = []
 
-    def fake_predict(series, horizon, timeout_seconds=120.0):
-        calls.append((series, horizon, timeout_seconds))
-        return WorkerPredictionResult(
-            worker_name="timesfm",
-            command=[],
-            returncode=0,
-            stdout="",
-            stderr="",
-            succeeded=True,
-            response={"worker": "timesfm", "model_id": "model", "horizon": horizon, "forecast": [5.0]},
-            forecast=[5.0],
-            error=None,
-        )
+    class FakeClient:
+        def predict(self, worker, series, horizon, timeout_seconds=120.0):
+            calls.append((worker, series, horizon, timeout_seconds))
+            return ForecastResult(
+                worker=worker,
+                model_id="model",
+                horizon=horizon,
+                forecast=[5.0],
+                raw_stdout="",
+                raw_stderr="",
+                returncode=0,
+                succeeded=True,
+                response={
+                    "worker": worker,
+                    "model_id": "model",
+                    "horizon": horizon,
+                    "forecast": [5.0],
+                },
+            )
 
-    monkeypatch.setattr("continuity_break_detector.series_prediction.predict_timesfm", fake_predict)
-
-    result = predict_series_with_worker("timesfm", [1.0, 2.0], 1, timeout_seconds=9)
+    result = predict_series_with_worker(
+        "timesfm", [1.0, 2.0], 1, timeout_seconds=9, client=FakeClient()
+    )
 
     assert result.forecast == [5.0]
-    assert calls == [([1.0, 2.0], 1, 9)]
+    assert calls == [("timesfm", [1.0, 2.0], 1, 9)]
 
 
 def test_build_success_response_shape() -> None:
     response = build_success_response(
         worker="chronos",
         series_input=SeriesInput(series=[1.0, 2.0], metadata={"name": "demo"}),
-        prediction=WorkerPredictionResult(
-            worker_name="chronos",
-            command=[],
-            returncode=0,
-            stdout="",
-            stderr="",
-            succeeded=True,
-            response={
-                "worker": "chronos",
-                "model_id": "amazon/chronos-bolt-small",
-                "horizon": 2,
-                "forecast": [2.0, 3.0],
-            },
+        prediction=ForecastResult(
+            worker="chronos",
+            model_id="amazon/chronos-bolt-small",
+            horizon=2,
             forecast=[2.0, 3.0],
-            error=None,
+            raw_stdout="",
+            raw_stderr="",
+            returncode=0,
+            succeeded=True,
         ),
         horizon=2,
     )
@@ -137,16 +137,15 @@ def test_predict_series_cli_success(monkeypatch, tmp_path: Path, capsys) -> None
     path = write_json(tmp_path / "series.json", {"series": [1, 2], "metadata": {"name": "demo"}})
 
     def fake_predict(worker, series, horizon, timeout_seconds=120.0):
-        return WorkerPredictionResult(
-            worker_name=worker,
-            command=[],
-            returncode=0,
-            stdout="",
-            stderr="worker log",
-            succeeded=True,
-            response={"worker": worker, "model_id": "model", "horizon": horizon, "forecast": [3.0]},
+        return ForecastResult(
+            worker=worker,
+            model_id="model",
+            horizon=horizon,
             forecast=[3.0],
-            error=None,
+            raw_stdout="",
+            raw_stderr="worker log",
+            returncode=0,
+            succeeded=True,
         )
 
     monkeypatch.setattr(series_prediction_runner, "predict_series_with_worker", fake_predict)

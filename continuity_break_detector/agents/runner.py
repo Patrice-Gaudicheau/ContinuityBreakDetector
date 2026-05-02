@@ -17,8 +17,8 @@ from continuity_break_detector.agents.memory import (
     update_agent_run_status,
 )
 from continuity_break_detector.agents.prompts import AGENT_ORDER, build_agent_prompt, build_router_prompt
-from continuity_break_detector.backtesting.ranking import latest_study_folder
 from continuity_break_detector.backtesting.study import STUDIES_DIR
+from continuity_break_detector.backtesting.study_discovery import resolve_study_path
 from continuity_break_detector.utils.paths import ensure_directory
 
 
@@ -48,7 +48,7 @@ def analyze_latest_study(
     client: LemonadeClient | None = None,
 ) -> AgentRunResult:
     return analyze_study(
-        latest_study_folder(studies_dir),
+        resolve_study_path(studies_dir=studies_dir),
         database_path=database_path,
         config=config,
         client=client,
@@ -444,12 +444,14 @@ def write_agent_run_json(
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run local Lemonade interpretation agents.")
     parser.add_argument("--studies-dir", type=Path, default=STUDIES_DIR)
+    parser.add_argument("--study-path", type=Path)
     parser.add_argument("--database-path", type=Path, default=DEFAULT_DATABASE_PATH)
     args = parser.parse_args()
 
     try:
-        result = analyze_latest_study(
-            studies_dir=args.studies_dir,
+        selected_study = resolve_study_path(study_path=args.study_path, studies_dir=args.studies_dir)
+        result = analyze_study(
+            selected_study,
             database_path=args.database_path,
         )
     except LemonadeError as exc:

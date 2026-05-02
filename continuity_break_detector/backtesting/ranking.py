@@ -11,6 +11,7 @@ import pandas as pd
 
 from continuity_break_detector.backtesting.domains import metric_domain
 from continuity_break_detector.backtesting.study import STUDIES_DIR
+from continuity_break_detector.backtesting.study_discovery import latest_valid_study_folder
 from continuity_break_detector.storage.parquet import read_parquet, write_parquet
 
 
@@ -64,10 +65,7 @@ class RankingResult:
 
 
 def latest_study_folder(studies_dir: Path = STUDIES_DIR) -> Path:
-    candidates = sorted(path for path in studies_dir.glob("*_rapid_influx_v1") if path.is_dir())
-    if not candidates:
-        raise FileNotFoundError(f"No backtest study folders found under {studies_dir}")
-    return candidates[-1]
+    return latest_valid_study_folder(studies_dir)
 
 
 def rank_latest_study(

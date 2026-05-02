@@ -5,17 +5,20 @@ from pathlib import Path
 
 from continuity_break_detector.backtesting.artifacts import (
     ArtifactParameters,
-    detect_latest_study_artifacts,
+    detect_study_artifacts,
 )
+from continuity_break_detector.backtesting.study_discovery import resolve_study_path
 from continuity_break_detector.backtesting.study import STUDIES_DIR
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Detect likely data artifacts in break candidates.")
     parser.add_argument("--studies-dir", type=Path, default=STUDIES_DIR)
+    parser.add_argument("--study-path", type=Path)
     args = parser.parse_args()
-    result = detect_latest_study_artifacts(
-        studies_dir=args.studies_dir,
+    selected_study = resolve_study_path(study_path=args.study_path, studies_dir=args.studies_dir)
+    result = detect_study_artifacts(
+        selected_study,
         parameters=ArtifactParameters(),
     )
     print(f"study_path,{result.study_path}")
@@ -28,4 +31,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

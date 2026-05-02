@@ -4,6 +4,8 @@ import os
 import subprocess
 
 from continuity_break_detector.ml_workers import (
+    predict_chronos,
+    predict_timesfm,
     run_chronos_worker_smoke,
     run_timesfm_worker_smoke,
 )
@@ -114,3 +116,77 @@ def test_existing_environment_is_preserved(monkeypatch) -> None:
     _, kwargs = calls[0]
     assert kwargs["env"]["CBD_CUSTOM_VALUE"] == "kept"
     assert kwargs["env"] is not os.environ
+
+
+def test_predict_timesfm_passes_json_to_worker_stdin(monkeypatch) -> None:
+    calls = []
+
+    def fake_run(*args, **kwargs):
+        calls.append((args, kwargs))
+        return subprocess.CompletedProcess(
+            args=args[0],
+            returncode=0,
+            stdout='{"worker":"timesfm","model_id":"m","horizon":1,"forecast":[2.5]}',
+            stderr="download note",
+        )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    result = predict_timesfm([1.0, 2.0], 1, timeout_seconds=9)
+
+    assert result.succeeded is True
+    assert result.forecast == [2.5]
+    assert result.stderr == "download note"
+    args, kwargs = calls[0]
+    assert args[0] == [
+        "docker",
+        "compose",
+        "run",
+        "--rm",
+        "-T",
+        "timesfm-worker",
+        "python",
+        "predict.py",
+    ]
+    assert kwargs["input"] == '{"series": [1.0, 2.0], "horizon": 1}'
+    assert kwargs["timeout"] == 9
+
+
+def test_predict_chronos_nonzero_exit_preserves_worker_error(monkeypatch) -> None:
+    def fake_run(*args, **kwargs):
+        return subprocess.CompletedProcess(
+            args=args[0],
+            returncode=2,
+            stdout='{"worker":"chronos","error":{"type":"validation_error","message":"bad input"}}',
+            stderr="",
+        )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    result = predict_chronos([1.0], 1)
+
+    assert result.succeeded is False
+    assert result.returncode == 2
+    assert result.error == "bad input"
+    assert result.response == {
+        "worker": "chronos",
+        "error": {"type": "validation_error", "message": "bad input"},
+    }
+
+
+def test_predict_invalid_json_output_is_represented(monkeypatch) -> None:
+    def fake_run(*args, **kwargs):
+        return subprocess.CompletedProcess(
+            args=args[0],
+            returncode=0,
+            stdout="not json",
+            stderr="",
+        )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    result = predict_timesfm([1.0], 1)
+
+    assert result.succeeded is False
+    assert result.response is None
+    assert "invalid JSON" in (result.error or "")

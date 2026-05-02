@@ -14,5 +14,6 @@ RUN python -m pip install --upgrade pip && \
 
 COPY docker/timesfm/worker_ready.py ./worker_ready.py
 COPY docker/timesfm/smoke_test.py ./smoke_test.py
+COPY docker/timesfm/predict.py ./predict.py
 
 CMD ["python", "worker_ready.py"]

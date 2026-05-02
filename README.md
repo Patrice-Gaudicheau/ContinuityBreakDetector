@@ -128,6 +128,26 @@ Full model smoke tests remain opt-in and may download model weights at runtime:
 python -m continuity_break_detector.main ml-smoke --full
 ```
 
+The worker containers also expose stable JSON prediction commands. They read one
+JSON object from stdin and write one JSON object to stdout; logs and model
+download messages go to stderr.
+
+```bash
+echo '{"series":[1,2,3,4],"horizon":1}' | docker compose run --rm -T timesfm-worker python predict.py
+echo '{"series":[1,2,3,4],"horizon":1}' | docker compose run --rm -T chronos-worker python predict.py
+```
+
+The same contract is available through the core CLI while keeping TimesFM and
+Chronos isolated in Docker:
+
+```bash
+python -m continuity_break_detector.main ml-predict --worker timesfm --series "1,2,3,4" --horizon 1
+python -m continuity_break_detector.main ml-predict --worker chronos --series "1,2,3,4" --horizon 1
+```
+
+The first prediction run may download model weights at runtime. The core Python
+environment still does not install or import ML worker dependencies.
+
 ## Pipeline Overview
 
 - **Ingestion**: fetches public-source data and stores raw responses with metadata.

@@ -10,8 +10,8 @@ from types import ModuleType
 from typing import Iterator
 
 
-DEFAULT_TIMESFM_LOCAL_PATH = Path("~/Projets/timesfm").expanduser()
-DEFAULT_CHRONOS_LOCAL_PATH = Path("~/Projets/chronos-forecasting").expanduser()
+DEFAULT_TIMESFM_LOCAL_PATH = Path("~/projects/timesfm").expanduser()
+DEFAULT_CHRONOS_LOCAL_PATH = Path("~/projects/chronos-forecasting").expanduser()
 
 
 @dataclass(frozen=True)
@@ -105,4 +105,3 @@ def _candidate_paths(root: Path, relative_paths: list[str]) -> list[Path]:
         if candidate not in paths:
             paths.append(candidate)
     return paths
-

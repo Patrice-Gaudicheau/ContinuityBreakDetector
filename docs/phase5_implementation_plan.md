@@ -17,8 +17,8 @@ fallback.
 
 Phase 5 must support local source checkouts:
 
-- `CBD_TIMESFM_LOCAL_PATH`, default `~/Projets/timesfm`
-- `CBD_CHRONOS_LOCAL_PATH`, default `~/Projets/chronos-forecasting`
+- `CBD_TIMESFM_LOCAL_PATH`, default `~/projects/timesfm`
+- `CBD_CHRONOS_LOCAL_PATH`, default `~/projects/chronos-forecasting`
 
 Availability detection must check in this order:
 
@@ -32,14 +32,14 @@ If a local checkout exists, the adapter may add a candidate source path to
 
 TimesFM local path candidates:
 
-- `~/Projets/timesfm/src`
-- `~/Projets/timesfm/timesfm-forecasting`
-- `~/Projets/timesfm`
+- `~/projects/timesfm/src`
+- `~/projects/timesfm/timesfm-forecasting`
+- `~/projects/timesfm`
 
 Chronos local path candidates:
 
-- `~/Projets/chronos-forecasting/src`
-- `~/Projets/chronos-forecasting`
+- `~/projects/chronos-forecasting/src`
+- `~/projects/chronos-forecasting`
 
 ## Adapter Behavior
 
@@ -76,8 +76,8 @@ advanced backtest.
 ## Configuration Example
 
 ```bash
-export CBD_TIMESFM_LOCAL_PATH="$HOME/Projets/timesfm"
-export CBD_CHRONOS_LOCAL_PATH="$HOME/Projets/chronos-forecasting"
+export CBD_TIMESFM_LOCAL_PATH="$HOME/projects/timesfm"
+export CBD_CHRONOS_LOCAL_PATH="$HOME/projects/chronos-forecasting"
 
 python main.py list_forecasters
 python main.py backtest_advanced
@@ -92,4 +92,3 @@ python main.py backtest_advanced
 - Do not add cloud APIs.
 - Do not add LLM calls to Phase 5 forecasting.
 - Preserve deterministic baseline behavior.
-

@@ -1,0 +1,42 @@
+{
+  "study_id": "sample_rapid_influx_advanced_v1",
+  "created_at": "2026-01-01T00:05:00+00:00",
+  "source_study_path": "studies/backtests/sample_rapid_influx_advanced_v1",
+  "artifact_parameters": {
+    "source_dominance_threshold": 0.8,
+    "extreme_max_z_threshold": 100.0,
+    "extreme_mean_z_threshold": 50.0,
+    "echo_window_years": 5
+  },
+  "candidate_count": 3,
+  "verdict_counts": {
+    "likely_data_artifact": 1,
+    "possible_data_artifact": 1,
+    "low_artifact_risk": 1
+  },
+  "likely_data_artifacts": [
+    {
+      "target_year": 1880,
+      "artifact_score": 0.85,
+      "artifact_verdict": "likely_data_artifact",
+      "ordinary_explanation_hint": null
+    }
+  ],
+  "possible_data_artifacts": [
+    {
+      "target_year": 2016,
+      "artifact_score": 0.5,
+      "artifact_verdict": "possible_data_artifact",
+      "revision_artifact_hint": "possible global data revision or methodology artifact"
+    }
+  ],
+  "low_artifact_risk_candidates": [
+    {
+      "target_year": 2020,
+      "artifact_score": 0.1,
+      "artifact_verdict": "low_artifact_risk",
+      "ordinary_explanation_hint": "known public-health shock"
+    }
+  ]
+}
+

@@ -55,13 +55,13 @@ CBD's active Python environment.
 Local checkout:
 
 ```text
-<TIMESFM_CHECKOUT>
+~/projects/timesfm
 ```
 
 Virtual environment Python:
 
 ```text
-<TIMESFM_CHECKOUT>/.venv/bin/python
+~/projects/timesfm/.venv/bin/python
 ```
 
 `pyvenv.cfg`:
@@ -71,7 +71,7 @@ home = /usr/bin
 include-system-site-packages = false
 version = 3.12.3
 executable = /usr/bin/python3.12
-command = /usr/bin/python3 -m venv <TIMESFM_CHECKOUT>/.venv
+command = /usr/bin/python3 -m venv ~/projects/timesfm/.venv
 ```
 
 Exact import names:
@@ -160,13 +160,13 @@ Missing dependencies:
 Local checkout:
 
 ```text
-<CHRONOS_CHECKOUT>
+~/projects/chronos-forecasting
 ```
 
 Virtual environment Python:
 
 ```text
-<CHRONOS_CHECKOUT>/.venv/bin/python
+~/projects/chronos-forecasting/.venv/bin/python
 ```
 
 `pyvenv.cfg`:
@@ -176,7 +176,7 @@ home = /usr/bin
 include-system-site-packages = false
 version = 3.12.3
 executable = /usr/bin/python3.12
-command = /usr/bin/python -m venv <CHRONOS_CHECKOUT>/.venv
+command = /usr/bin/python -m venv ~/projects/chronos-forecasting/.venv
 ```
 
 Exact import names:
@@ -295,14 +295,14 @@ Reasons:
 Suggested worker behavior for a later implementation:
 
 - TimesFM subprocess:
-  - executable: `<TIMESFM_CHECKOUT>/.venv/bin/python`
+  - executable: `~/projects/timesfm/.venv/bin/python`
   - imports: `timesfm`, `numpy`, `torch`
   - model: `timesfm.TimesFM_2p5_200M_torch.from_pretrained(...)`
   - forecast call: `model.forecast(horizon=horizon, inputs=[array])`
   - point output: `point[0].tolist()`
 
 - Chronos subprocess:
-  - executable: `<CHRONOS_CHECKOUT>/.venv/bin/python`
+  - executable: `~/projects/chronos-forecasting/.venv/bin/python`
   - imports: `torch`, `chronos.BaseChronosPipeline`
   - model: `BaseChronosPipeline.from_pretrained("amazon/chronos-bolt-small", ...)`
   - forecast call: `pipeline.predict(context, prediction_length=horizon)`

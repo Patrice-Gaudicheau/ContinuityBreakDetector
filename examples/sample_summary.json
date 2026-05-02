@@ -1,0 +1,33 @@
+{
+  "study_id": "sample_rapid_influx_advanced_v1",
+  "created_at": "2026-01-01T00:00:00+00:00",
+  "input_path": "data/processed/normalized",
+  "models": [
+    "naive_last_value",
+    "linear_trend",
+    "exponential_trend",
+    "timesfm",
+    "chronos"
+  ],
+  "parameters": {
+    "train_window_years": 20,
+    "forecast_horizon_years": 5,
+    "minimum_series_length": 30,
+    "anomaly_window": 10,
+    "anomaly_threshold": 2.5
+  },
+  "metrics_processed": 3,
+  "forecast_error_rows": 1200,
+  "anomaly_rows": 42,
+  "cross_domain_break_rows": 7,
+  "top_cross_domain_breaks": [
+    {
+      "target_year": 2020,
+      "affected_domains": ["economics", "health"],
+      "affected_domain_count": 2,
+      "anomaly_count": 8,
+      "aggregate_score": 3.4
+    }
+  ]
+}
+

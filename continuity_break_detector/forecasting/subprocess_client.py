@@ -11,8 +11,8 @@ from continuity_break_detector.forecasting.base import ForecastingError, ensure_
 from continuity_break_detector.utils.paths import PROJECT_ROOT
 
 
-DEFAULT_TIMESFM_PYTHON = Path("<TIMESFM_CHECKOUT>/.venv/bin/python")
-DEFAULT_CHRONOS_PYTHON = Path("<CHRONOS_CHECKOUT>/.venv/bin/python")
+DEFAULT_TIMESFM_PYTHON = Path("~/projects/timesfm/.venv/bin/python")
+DEFAULT_CHRONOS_PYTHON = Path("~/projects/chronos-forecasting/.venv/bin/python")
 DEFAULT_TIMEOUT_SECONDS = 300.0
 
 

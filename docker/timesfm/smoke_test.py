@@ -24,24 +24,25 @@ def main() -> int:
             print("TimesFM model smoke skipped: set CBD_RUN_ML_MODEL_SMOKE=1 to enable runtime model loading")
             return 0
 
-        model_id = os.environ.get("CBD_TIMESFM_MODEL_ID", "google/timesfm-2.5-200m-pytorch")
+        model_id = os.environ.get("CBD_TIMESFM_MODEL_ID", "google/timesfm-1.0-200m-pytorch")
         print(f"TimesFM model smoke starting: model_id={model_id}")
-        model = timesfm.TimesFM_2p5_200M_torch.from_pretrained(
-            model_id,
-            local_files_only=False,
-            torch_compile=False,
+        model = timesfm.TimesFm(
+            hparams=timesfm.TimesFmHparams(
+                context_len=512,
+                horizon_len=1,
+                input_patch_len=32,
+                output_patch_len=128,
+                backend="cpu",
+            ),
+            checkpoint=timesfm.TimesFmCheckpoint(
+                version="torch",
+                huggingface_repo_id=model_id,
+            ),
         )
-        model.compile(
-            timesfm.ForecastConfig(
-                max_context=16,
-                max_horizon=1,
-                normalize_inputs=True,
-            )
-        )
-        point, _ = model.forecast(horizon=1, inputs=[array])
+        point, _ = model.forecast(inputs=[array], freq=[0], normalize=True)
         if point.shape[-1] < 1:
             raise RuntimeError(f"unexpected TimesFM forecast shape: {point.shape}")
-        print("TimesFM model smoke passed")
+        print(f"TimesFM model smoke passed: forecast={float(point[0, 0]):.6g}")
         return 0
     except Exception as exc:
         print(f"TimesFM smoke failed: {exc}", file=sys.stderr)

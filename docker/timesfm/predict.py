@@ -6,6 +6,7 @@ import math
 import os
 import sys
 from numbers import Real
+from pathlib import Path
 from typing import Any
 
 DEFAULT_MODEL_ID = "google/timesfm-1.0-200m-pytorch"
@@ -48,6 +49,8 @@ def predict(series: list[float], horizon: int) -> dict[str, Any]:
         import timesfm
 
         model_id = os.environ.get("CBD_TIMESFM_MODEL_ID", DEFAULT_MODEL_ID)
+        cache_preexisting = is_model_cached(model_id)
+        log_cache_status(model_id, cache_preexisting)
         model = timesfm.TimesFm(
             hparams=timesfm.TimesFmHparams(
                 context_len=512,
@@ -66,6 +69,8 @@ def predict(series: list[float], horizon: int) -> dict[str, Any]:
             freq=[0],
             normalize=True,
         )
+        if not cache_preexisting and is_model_cached(model_id):
+            print(f"{WORKER_NAME} model cache populated: {model_id}", file=sys.stderr)
     forecast = [float(value) for value in point[0, :horizon].tolist()]
     return {
         "worker": WORKER_NAME,
@@ -73,6 +78,17 @@ def predict(series: list[float], horizon: int) -> dict[str, Any]:
         "horizon": horizon,
         "forecast": forecast,
     }
+
+
+def is_model_cached(model_id: str) -> bool:
+    cache_root = Path(os.environ.get("HF_HOME", "/root/.cache/huggingface"))
+    model_dir = cache_root / "hub" / f"models--{model_id.replace('/', '--')}"
+    return model_dir.exists() and any(model_dir.iterdir())
+
+
+def log_cache_status(model_id: str, cached: bool) -> None:
+    status = "hit" if cached else "miss"
+    print(f"{WORKER_NAME} Hugging Face cache {status}: {model_id}", file=sys.stderr)
 
 
 def error_response(error_type: str, message: str) -> dict[str, Any]:

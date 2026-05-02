@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -8,6 +7,12 @@ import pandas as pd
 
 from continuity_break_detector.config import ROLLING_STATISTICS_WINDOW
 from continuity_break_detector.forecast_client import ForecastResult
+from continuity_break_detector.prediction_schema import (
+    PredictionSchemaError,
+)
+from continuity_break_detector.prediction_schema import (
+    validate_forecast as validate_schema_forecast,
+)
 from continuity_break_detector.series_prediction import (
     SeriesInput,
     SeriesPredictionError,
@@ -124,12 +129,7 @@ def analysis_window(point_count: int) -> int:
 
 
 def validate_forecast(forecast: list[float]) -> list[float]:
-    validated: list[float] = []
-    for index, value in enumerate(forecast):
-        if isinstance(value, bool) or not isinstance(value, int | float):
-            raise SeriesPredictionError("worker_error", f"forecast[{index}] must be a finite number")
-        numeric = float(value)
-        if not math.isfinite(numeric):
-            raise SeriesPredictionError("worker_error", f"forecast[{index}] must be a finite number")
-        validated.append(numeric)
-    return validated
+    try:
+        return validate_schema_forecast(forecast)
+    except PredictionSchemaError as exc:
+        raise SeriesPredictionError("worker_error", str(exc)) from exc

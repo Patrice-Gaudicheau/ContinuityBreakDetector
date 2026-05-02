@@ -14,6 +14,7 @@ from continuity_break_detector.forecasting.runner import (
 )
 from continuity_break_detector.ingestion.runner import main as ingestion_main
 from continuity_break_detector.normalization.runner import main as normalization_main
+from continuity_break_detector.publication.runner import main as publication_main
 from continuity_break_detector.statistics.runner import main as statistics_main
 
 
@@ -51,7 +52,10 @@ def main() -> int:
     if len(sys.argv) >= 2 and sys.argv[1] == "backtest_advanced":
         sys.argv = [sys.argv[0], *sys.argv[2:]]
         return backtest_advanced_main()
-    print("Usage: python main.py {ingest,normalize,compute_statistics,backtest,rank_breaks,audit_candidates,analyze_agents,lemonade_debug,detect_artifacts,list_forecasters,backtest_advanced}")
+    if len(sys.argv) >= 2 and sys.argv[1] == "draft_paper":
+        sys.argv = [sys.argv[0], *sys.argv[2:]]
+        return publication_main()
+    print("Usage: python main.py {ingest,normalize,compute_statistics,backtest,rank_breaks,audit_candidates,analyze_agents,lemonade_debug,detect_artifacts,list_forecasters,backtest_advanced,draft_paper}")
     return 2
 
 

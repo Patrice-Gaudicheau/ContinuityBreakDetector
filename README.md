@@ -55,6 +55,22 @@ The demo writes outputs under:
 studies/demo_study/
 ```
 
+## Lightweight Docker
+
+Build the core reproducibility image:
+
+```bash
+docker build -t continuity-break-detector:core .
+```
+
+Run the test suite inside Docker:
+
+```bash
+docker run --rm continuity-break-detector:core
+```
+
+This container is intentionally lightweight and installs the project with its test dependencies only. It does not containerize the optional TimesFM or Chronos worker environments.
+
 ## Pipeline Overview
 
 - **Ingestion**: fetches public-source data and stores raw responses with metadata.

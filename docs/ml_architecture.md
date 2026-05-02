@@ -15,6 +15,15 @@ core CLI / pipeline
   -> JSON response on stdout
 ```
 
+Experimental warm mode adds a second backend:
+
+```text
+core CLI
+  -> DockerWarmForecastClient
+  -> docker compose run --rm -T timesfm-worker|chronos-worker python daemon.py
+  -> newline-delimited JSON requests and responses over stdin/stdout
+```
+
 The workers are separate Docker images:
 
 - `timesfm-worker`: Python 3.11 image with TimesFM and CPU Torch.
@@ -39,6 +48,8 @@ The ML layer is optional:
 
 - `ml-smoke` checks worker availability.
 - `ml-predict` calls a worker with inline series input.
+- `ml-daemon-predict` starts an experimental warm worker session and can repeat
+  predictions without restarting the container for each request.
 - `predict-series` reads a JSON series file and returns a forecast.
 - `analyze-series` appends a forecast and runs the existing break detector over
   the historical-plus-forecast series.
@@ -55,6 +66,10 @@ Workers use JSON over stdin/stdout:
 The shared schema module is the source of truth for request and response
 validation. See [worker_contract.md](worker_contract.md).
 
+Daemon mode uses the same request and response objects but frames them as one
+JSON object per line. It also accepts `{"command":"shutdown"}` to end a session
+cleanly.
+
 ## Why Docker First
 
 TimesFM and Chronos have different dependency and Python-version constraints
@@ -69,13 +84,13 @@ This avoids dependency contamination:
 - CI and local deterministic tests remain lightweight
 - model downloads happen only at runtime, into the Hugging Face cache volume
 
-## Future Backend
+## Warm Worker Daemon
 
-`ForecastClient` is intentionally small because the next backend is expected to
-be a warm worker daemon. The daemon should keep loaded models alive across many
-predictions, which matters for batch and backtest workloads where ephemeral
-containers repeatedly pay startup and model-load cost.
+`DockerWarmForecastClient` is a first daemon backend. It keeps a Docker worker
+process alive for repeated predictions within one client session. The worker
+loads the model lazily on the first request and reuses it for later requests in
+that session.
 
-The daemon should preserve the same JSON contract and plug in behind
-`ForecastClient` without changing CLI output or moving ML dependencies into the
-core environment.
+One-shot `DockerForecastClient` remains the default. Daemon mode is experimental
+and currently exposed through `ml-daemon-predict`; it is not used by regular
+pipeline commands yet.

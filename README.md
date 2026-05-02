@@ -175,11 +175,23 @@ python -m continuity_break_detector.main ml-predict --worker chronos --series "1
 The first prediction run may download model weights at runtime. The core Python
 environment still does not install or import ML worker dependencies.
 
+Experimental daemon mode keeps a worker process alive for repeated predictions
+within one command:
+
+```bash
+python -m continuity_break_detector.main ml-daemon-predict --worker timesfm --series "1,2,3,4" --horizon 3 --repeat 3
+python -m continuity_break_detector.main ml-daemon-predict --worker chronos --series "1,2,3,4" --horizon 3 --repeat 3
+```
+
+Daemon mode uses newline-delimited JSON over stdin/stdout. It does not start an
+HTTP server and is intended for future batch/backtest workloads.
+
 Internally, ML predictions go through `ForecastClient`. The first implementation,
 `DockerForecastClient`, owns the Docker Compose JSON stdin/stdout path used by
-`ml-predict`, `predict-series`, and `analyze-series`. Future daemon, local
-subprocess, or remote API backends should plug in there instead of adding new
-worker subprocess logic to pipeline modules.
+`ml-predict`, `predict-series`, and `analyze-series`. The experimental
+`DockerWarmForecastClient` starts `daemon.py` in a worker container and sends
+newline-delimited JSON requests over stdin/stdout so a model can stay loaded
+within one session. One-shot prediction remains the default.
 
 The request and response contract is centralized in
 `continuity_break_detector.prediction_schema`. The core client, worker
@@ -251,6 +263,7 @@ Commands that require Docker when using the current ML backend:
 
 - `ml-smoke`
 - `ml-predict`
+- `ml-daemon-predict`
 - `predict-series`
 - `analyze-series`
 - direct `docker compose run ... predict.py` worker calls
@@ -272,7 +285,7 @@ cache volume. Regular deterministic workflows do not.
 ## Features
 
 - Deterministic baseline forecasting: `naive_last_value`, `linear_trend`, `exponential_trend`
-- Optional advanced forecasters isolated in subprocess workers
+- Optional advanced forecasters isolated in Docker workers
 - Optional local LLM interpretation through a Lemonade-compatible endpoint
 - File-based, inspectable pipeline using Parquet and JSON artifacts
 - CLI entrypoint: `cbd`

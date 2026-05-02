@@ -27,43 +27,62 @@ def validate_payload(payload: Any) -> tuple[list[float], int]:
     return request.series, request.horizon
 
 
-def predict(series: list[float], horizon: int) -> dict[str, Any]:
-    with contextlib.redirect_stdout(sys.stderr):
-        import numpy as np
-        import timesfm
+class ModelPredictor:
+    def __init__(self) -> None:
+        self.model_id = os.environ.get("CBD_TIMESFM_MODEL_ID", DEFAULT_MODEL_ID)
+        self._model: Any | None = None
+        self._horizon_len: int | None = None
 
-        model_id = os.environ.get("CBD_TIMESFM_MODEL_ID", DEFAULT_MODEL_ID)
-        cache_preexisting = is_model_cached(model_id)
-        log_cache_status(model_id, cache_preexisting)
-        model = timesfm.TimesFm(
-            hparams=timesfm.TimesFmHparams(
-                context_len=512,
-                horizon_len=horizon,
-                input_patch_len=32,
-                output_patch_len=128,
-                backend="cpu",
-            ),
-            checkpoint=timesfm.TimesFmCheckpoint(
-                version="torch",
-                huggingface_repo_id=model_id,
-            ),
+    def predict(self, series: list[float], horizon: int) -> dict[str, Any]:
+        model = self._load_model(horizon)
+        with contextlib.redirect_stdout(sys.stderr):
+            import numpy as np
+
+            point, _ = model.forecast(
+                inputs=[np.asarray(series, dtype=float)],
+                freq=[0],
+                normalize=True,
+            )
+        forecast = [float(value) for value in point[0, :horizon].tolist()]
+        return prediction_success_to_json_dict(
+            PredictionSuccess(
+                worker=WORKER_NAME,
+                model_id=self.model_id,
+                horizon=horizon,
+                forecast=forecast,
+            )
         )
-        point, _ = model.forecast(
-            inputs=[np.asarray(series, dtype=float)],
-            freq=[0],
-            normalize=True,
-        )
-        if not cache_preexisting and is_model_cached(model_id):
-            print(f"{WORKER_NAME} model cache populated: {model_id}", file=sys.stderr)
-    forecast = [float(value) for value in point[0, :horizon].tolist()]
-    return prediction_success_to_json_dict(
-        PredictionSuccess(
-            worker=WORKER_NAME,
-            model_id=model_id,
-            horizon=horizon,
-            forecast=forecast,
-        )
-    )
+
+    def _load_model(self, horizon: int) -> Any:
+        if self._model is not None and self._horizon_len is not None and horizon <= self._horizon_len:
+            return self._model
+
+        with contextlib.redirect_stdout(sys.stderr):
+            import timesfm
+
+            cache_preexisting = is_model_cached(self.model_id)
+            log_cache_status(self.model_id, cache_preexisting)
+            self._model = timesfm.TimesFm(
+                hparams=timesfm.TimesFmHparams(
+                    context_len=512,
+                    horizon_len=horizon,
+                    input_patch_len=32,
+                    output_patch_len=128,
+                    backend="cpu",
+                ),
+                checkpoint=timesfm.TimesFmCheckpoint(
+                    version="torch",
+                    huggingface_repo_id=self.model_id,
+                ),
+            )
+            if not cache_preexisting and is_model_cached(self.model_id):
+                print(f"{WORKER_NAME} model cache populated: {self.model_id}", file=sys.stderr)
+        self._horizon_len = horizon
+        return self._model
+
+
+def predict(series: list[float], horizon: int) -> dict[str, Any]:
+    return ModelPredictor().predict(series, horizon)
 
 
 def is_model_cached(model_id: str) -> bool:

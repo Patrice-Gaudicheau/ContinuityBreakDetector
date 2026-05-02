@@ -27,22 +27,39 @@ def validate_payload(payload: Any) -> tuple[list[float], int]:
     return request.series, request.horizon
 
 
-def predict(series: list[float], horizon: int) -> dict[str, Any]:
-    with contextlib.redirect_stdout(sys.stderr):
-        import torch
-        from chronos import BaseChronosPipeline
+class ModelPredictor:
+    def __init__(self) -> None:
+        self.model_id = os.environ.get("CBD_CHRONOS_MODEL_ID", DEFAULT_MODEL_ID)
+        self._pipeline: Any | None = None
 
-        model_id = os.environ.get("CBD_CHRONOS_MODEL_ID", DEFAULT_MODEL_ID)
-        cache_preexisting = is_model_cached(model_id)
-        log_cache_status(model_id, cache_preexisting)
-        pipeline = BaseChronosPipeline.from_pretrained(
-            model_id,
-            device_map="cpu",
-            local_files_only=False,
-        )
-        raw = pipeline.predict(torch.tensor(series, dtype=torch.float32), prediction_length=horizon)
-        if not cache_preexisting and is_model_cached(model_id):
-            print(f"{WORKER_NAME} model cache populated: {model_id}", file=sys.stderr)
+    def predict(self, series: list[float], horizon: int) -> dict[str, Any]:
+        pipeline = self._load_pipeline()
+        with contextlib.redirect_stdout(sys.stderr):
+            import torch
+
+            raw = pipeline.predict(torch.tensor(series, dtype=torch.float32), prediction_length=horizon)
+        return success_response_from_raw(raw, self.model_id, horizon)
+
+    def _load_pipeline(self) -> Any:
+        if self._pipeline is not None:
+            return self._pipeline
+
+        with contextlib.redirect_stdout(sys.stderr):
+            from chronos import BaseChronosPipeline
+
+            cache_preexisting = is_model_cached(self.model_id)
+            log_cache_status(self.model_id, cache_preexisting)
+            self._pipeline = BaseChronosPipeline.from_pretrained(
+                self.model_id,
+                device_map="cpu",
+                local_files_only=False,
+            )
+            if not cache_preexisting and is_model_cached(self.model_id):
+                print(f"{WORKER_NAME} model cache populated: {self.model_id}", file=sys.stderr)
+        return self._pipeline
+
+
+def success_response_from_raw(raw: Any, model_id: str, horizon: int) -> dict[str, Any]:
     if raw.ndim == 3:
         if raw.shape[1] > 1:
             point = raw[0, raw.shape[1] // 2, :horizon]
@@ -59,6 +76,10 @@ def predict(series: list[float], horizon: int) -> dict[str, Any]:
             forecast=forecast,
         )
     )
+
+
+def predict(series: list[float], horizon: int) -> dict[str, Any]:
+    return ModelPredictor().predict(series, horizon)
 
 
 def is_model_cached(model_id: str) -> bool:

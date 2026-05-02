@@ -147,4 +147,4 @@ The current conclusion is cautious: the pipeline detects known real-world shocks
 
 ## License
 
-No license file is currently included.
+This project is licensed under the MIT License.

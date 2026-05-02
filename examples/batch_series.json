@@ -1,0 +1,15 @@
+{
+  "series": [
+    {
+      "name": "stable_demo",
+      "values": [1.0, 1.1, 1.2, 1.3]
+    },
+    {
+      "name": "break_demo",
+      "values": [1.0, 1.1, 1.2, 4.8]
+    }
+  ],
+  "metadata": {
+    "source": "examples"
+  }
+}

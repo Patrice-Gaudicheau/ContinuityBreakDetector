@@ -15,12 +15,14 @@ continuity-break detector. It is not a product roadmap.
   - `ml-predict`
   - `ml-daemon-predict`
   - `predict-series`
+  - `batch-predict`
   - `analyze-series`
 - `ForecastClient` abstraction for ML prediction access.
 - Experimental `DockerWarmForecastClient` daemon backend for repeated
   predictions in one worker session.
 - Shared prediction schema module for request and response validation.
-- Pipeline-level forecast and forecast-plus-break-analysis commands.
+- Pipeline-level forecast, batch forecast, and forecast-plus-break-analysis
+  commands.
 
 ## Current Limitations
 
@@ -28,16 +30,18 @@ continuity-break detector. It is not a product roadmap.
   prediction command.
 - `predict-series` and `analyze-series` default to one-shot prediction.
 - Daemon mode is explicit opt-in through `--mode daemon`.
+- `batch-predict` uses daemon mode by default, but resource and concurrency
+  limits are still basic.
 - Worker logs include upstream library warnings and download progress on stderr.
 - Only the prediction contract is centralized; model-specific loading remains in
   each worker script.
 
 ## Next Step: Batch/Backtest Integration
 
-The warm-worker daemon exists and pipeline-level single-series commands can opt
-into it. The next step is to integrate daemon-backed forecasting into batch and
-backtest workloads where many predictions are made in one run. Reusing a loaded
-model should reduce repeated:
+The warm-worker daemon exists and `batch-predict` can reuse it for multiple
+series. The next step is to integrate daemon-backed forecasting into backtest
+workloads where many predictions are made in one run. Reusing a loaded model
+should reduce repeated:
 
 - Docker container startup
 - Python interpreter startup

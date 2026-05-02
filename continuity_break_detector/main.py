@@ -19,6 +19,7 @@ from continuity_break_detector.ml_predict_runner import main as ml_predict_main
 from continuity_break_detector.ml_worker_runner import main as ml_worker_main
 from continuity_break_detector.normalization.runner import main as normalization_main
 from continuity_break_detector.publication.runner import main as publication_main
+from continuity_break_detector.series_prediction_runner import main as series_prediction_main
 from continuity_break_detector.statistics.runner import main as statistics_main
 from continuity_break_detector.utils.logging import configure_logging, get_logger
 
@@ -40,6 +41,7 @@ COMMANDS: dict[str, Callable[[], int]] = {
     "demo_study": demo_study_main,
     "ml-smoke": ml_worker_main,
     "ml-predict": ml_predict_main,
+    "predict-series": series_prediction_main,
 }
 
 

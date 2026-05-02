@@ -74,6 +74,23 @@ The demo writes outputs under:
 studies/demo_study/
 ```
 
+### Example agent output (excerpt)
+
+```text
+[Skeptic]
+
+Top candidate: 2012
+
+Assessment:
+- Strong statistical signal across multiple domains
+- High artifact risk due to source revision patterns
+- Similar patterns observed in neighboring years
+
+Conclusion:
+This candidate is more likely a data artifact than a real-world event.
+Confidence: medium
+```
+
 ## Testing
 
 ```bash

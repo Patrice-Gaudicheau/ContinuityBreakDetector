@@ -23,6 +23,7 @@ include = ["continuity_break_detector*"]
 test = [
   "mypy",
   "pytest",
+  "pytest-cov",
   "ruff",
 ]
 

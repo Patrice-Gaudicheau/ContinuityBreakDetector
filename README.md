@@ -2,12 +2,9 @@
 
 [![CI](https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/actions/workflows/test.yml/badge.svg)](https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/actions/workflows/test.yml)
 
-ContinuityBreakDetector is a deterministic-first research pipeline for finding
-candidate continuity breaks in long-term public time-series data. It retrieves
-raw source data, normalizes it into yearly time series, computes transparent
-statistical signals, runs historical forecasting backtests, filters likely data
-artifacts, and can optionally produce local interpretation reports and research
-drafts.
+ContinuityBreakDetector is a deterministic-first pipeline for finding candidate continuity breaks in long-term public time-series data. It ingests source data, normalizes it into yearly series, computes transparent statistical signals, runs historical backtests, ranks cross-domain anomalies, audits likely causes, and filters data artifacts before any optional ML or LLM interpretation is used.
+
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -24,276 +21,130 @@ flowchart LR
     LLM --> PUB["Publication outputs"]
 ```
 
-The project is designed as an auditable portfolio system: every stage writes
-files, metadata, and reproducible outputs. It does not claim proof of simulation,
-proof of unexplained influx, or causal certainty. Current study outputs indicate
-that the pipeline detects known real-world shocks and data artifacts, but does
-not currently identify an unexplained synchronized cross-domain continuity
-break.
+## Key Idea
 
-## Problem
+The scientific path is deterministic through artifact filtering. Optional TimesFM, Chronos, and Lemonade components can add forecasting or interpretation, but they do not replace the auditable core.
 
-Long-run development datasets can contain abrupt changes caused by real shocks,
-methodology revisions, sparse early data, source coverage changes, or model
-failure. A raw anomaly score alone is not enough to decide whether a year is
-substantively meaningful. ContinuityBreakDetector separates the workflow into
-retrieval, normalization, deterministic statistics, backtesting, ranking, audit,
-artifact filtering, and optional interpretation so each claim can be inspected.
+Every major stage writes local artifacts and metadata so a reviewer can inspect what happened:
 
-## Quick Start
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -e '.[test]'
-make quality
-make run-demo
-```
-
-`make run-demo` uses only committed synthetic examples and does not require
-network access, local model paths, Lemonade, TimesFM, or Chronos.
+- raw retrieval metadata
+- normalized Parquet time series
+- statistical features
+- forecast errors
+- ranked break candidates
+- candidate audits
+- data artifact audits
+- reproducibility metadata
 
 ## Quick Demo
 
 ```bash
+python -m pip install -e '.[test]'
 make demo-study
 ```
 
-This runs a small reproducible study from embedded fixture data in seconds. It
-does not use network access, TimesFM, Chronos, or Lemonade. The command writes a
-demo study folder under `studies/demo_study/` with normalized parquet files,
-statistics, deterministic backtest errors, ranked candidates, candidate audit,
-and data artifact audit outputs.
+`make demo-study` runs an end-to-end deterministic study from embedded fixture data in seconds. It does not use network access, TimesFM, Chronos, or Lemonade.
 
-## Feature Matrix
+The demo writes outputs under:
 
-| Capability | Status | Notes |
-| --- | --- | --- |
-| Core deterministic pipeline | Included | Retrieval, normalization, statistics, backtesting, ranking, audit, and artifact filtering |
-| TimesFM / Chronos subprocess forecasting | Optional | Requires local model environments configured with environment variables |
-| Lemonade local agent reports | Optional | Reads deterministic study outputs; not part of the scientific method |
-| Paper drafting workflow | Optional | Builds factual tables first, then drafts prose from a compact brief |
-| Generated data in Git | Excluded | Raw data, processed data, studies, and paper drafts are ignored |
-
-## Architecture
-
-```mermaid
-flowchart TD
-    A["Public source APIs"] --> B["Raw files + retrieval metadata"]
-    B --> C["Normalized yearly time series"]
-    C --> D["Deterministic statistics"]
-    C --> E["Historical backtests"]
-    E --> F["Candidate ranking"]
-    F --> G["Candidate audit"]
-    G --> H["Data artifact filtering"]
-    H --> I["Study outputs"]
-    I --> J["Optional local reports"]
-    I --> K["Optional paper draft"]
+```text
+studies/demo_study/
 ```
 
-Core design choices:
+## Pipeline Overview
 
-- raw source responses are stored separately from processed outputs
-- normalized data uses a simple yearly schema
-- statistics and break candidates are deterministic
-- LLM-based interpretation is optional and never part of the statistical method
-- TimesFM and Chronos integrations are optional subprocess workers
-- generated data and study outputs are intentionally excluded from Git
+- **Ingestion**: fetches public-source data and stores raw responses with metadata.
+- **Normalization**: converts source-specific payloads into a common yearly schema.
+- **Statistics**: computes growth, log growth, acceleration, rolling z-scores, and break scores.
+- **Backtesting**: evaluates whether future values became difficult to predict from prior windows.
+- **Ranking**: groups anomalies into cross-domain candidate break years.
+- **Audit**: checks robustness, model agreement, source coverage, sparsity, and known explanations.
+- **Artifact detection**: flags likely data artifacts, source dominance, extreme statistical values, and model echoes.
+- **Publication outputs**: produces compact reports and optional draft material from deterministic results.
 
-## Pipeline Phases
+## Features
 
-1. **Source retrieval**: API-first connectors write raw responses and metadata.
-2. **Normalization**: raw files become yearly time series with `source_id`,
-   `metric`, `year`, `value`, `unit`, and `entity`.
-3. **Statistics**: growth, log growth, acceleration, rolling z-scores, rolling
-   deviations, and simple break candidates are computed deterministically.
-4. **Backtesting**: rolling historical windows evaluate forecast failure using
-   baseline models.
-5. **Ranking and audit**: cross-domain candidates are ranked, checked for
-   robustness, and filtered for artifact risk.
-6. **Optional interpretation**: local Lemonade-compatible LLM reports can read
-   deterministic outputs. These reports are not treated as scientific evidence.
-7. **Optional paper drafting**: compact study summaries and tables can be passed
-   to a local or CLI model to draft research prose.
+- Deterministic baseline forecasting: `naive_last_value`, `linear_trend`, `exponential_trend`
+- Optional advanced forecasters isolated in subprocess workers
+- Optional local LLM interpretation through a Lemonade-compatible endpoint
+- File-based, inspectable pipeline using Parquet and JSON artifacts
+- CLI entrypoint: `cbd`
+- CI with Ruff and pytest
+- 60+ tests covering normalization, statistics, backtesting, ranking, audit, artifacts, forecasting adapters, and publication helpers
+- No committed raw data, generated studies, secrets, model checkpoints, or local caches
 
 ## Data Sources
 
-The system is designed to be extensible across multiple public data providers.
+Currently supported source integrations:
 
-### Currently Supported
+- World Bank datasets
+- Our World in Data
+- OpenAlex
+- arXiv
+- Crossref
 
-The following sources are fully implemented and tested:
-
-- World Bank datasets (global development indicators)
-- Our World in Data (long-term global indicators)
-- OpenAlex (scientific publication metadata)
-- arXiv (scientific preprints)
-- Crossref (scholarly metadata)
-
-### Extensibility
-
-The architecture supports additional sources through the same ingestion and
-normalization pipeline. Examples of compatible sources include:
-
-- OECD
-- Eurostat
-- IEA
-- Energy Institute / BP datasets
-- Maddison historical datasets
-- UN World Population Prospects
-- GitHub public activity data
-- Dimensions
-
-These are not included in the current implementation and are listed only as
-examples of supported integration patterns.
+The source layer is designed for additional public-data connectors using the same ingestion and normalization pattern. Examples of compatible future integrations include OECD, Eurostat, IEA, Energy Institute / BP datasets, Maddison, UN World Population Prospects, GitHub public activity data, and Dimensions.
 
 See:
 
 - [docs/data_sources.md](docs/data_sources.md)
 - [docs/sources_connection_detail.md](docs/sources_connection_detail.md)
 
-## Optional Advanced Forecasters
+## Advanced Components
 
-The deterministic baselines always run:
+The advanced components are optional and isolated from the deterministic core.
 
-- `naive_last_value`
-- `linear_trend`
-- `exponential_trend`
+| Component | Role | Isolation |
+| --- | --- | --- |
+| TimesFM | Neural time-series forecasting | Subprocess worker via `CBD_TIMESFM_PYTHON` |
+| Chronos | Probabilistic time-series forecasting | Subprocess worker via `CBD_CHRONOS_PYTHON` |
+| Lemonade | Local LLM interpretation reports | OpenAI-compatible local HTTP endpoint |
 
-Optional local forecasters can be enabled without installing their dependencies
-into this repository:
-
-- TimesFM through `CBD_TIMESFM_PYTHON`
-- Chronos through `CBD_CHRONOS_PYTHON`
-
-Example:
+If an optional model is unavailable, the deterministic pipeline still runs.
 
 ```bash
-export CBD_TIMESFM_PYTHON="$HOME/projects/timesfm/.venv/bin/python"
-export CBD_CHRONOS_PYTHON="$HOME/projects/chronos-forecasting/.venv/bin/python"
 python main.py list_forecasters
 python main.py backtest_advanced
-```
-
-The subprocess workers read JSON from stdin and write JSON to stdout. If either
-optional model is unavailable, the advanced backtest continues with available
-models and deterministic baselines.
-
-## Optional Local LLM Analysis
-
-Agent-style reports can run against a local Lemonade OpenAI-compatible endpoint.
-This is optional and separate from deterministic analysis.
-
-```bash
-export CBD_LEMONADE_BASE_URL="http://<LEMONADE_HOST>:<PORT>/v1"
-export CBD_ROUTER_MODEL="Qwen3-0.6B-GGUF"
-export CBD_EXECUTOR_MODEL="Qwen3.5-35B-A3B-GGUF"
 python main.py analyze_agents --study-path studies/backtests/<study_id>
 ```
 
-The prompts instruct the model to prefer ordinary explanations, distinguish data
-artifacts from real-world shocks, and avoid proof claims.
+## Example Outputs
 
-## Installation
+Committed examples:
 
-Python 3.11 or later is required.
+- [examples/sample_summary.json](examples/sample_summary.json)
+- [examples/sample_artifact_audit.json](examples/sample_artifact_audit.json)
+- [examples/sample_report.md](examples/sample_report.md)
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -e '.[test]'
+Generated outputs:
+
+```text
+data/raw/
+data/processed/
+studies/backtests/
+studies/demo_study/
+publication/paper/
 ```
 
-## Basic Usage
+Generated outputs are intentionally ignored by Git.
 
-```bash
-python main.py ingest
-python main.py normalize
-python main.py compute_statistics
-python main.py backtest
-python main.py rank_breaks
-python main.py audit_candidates
-python main.py detect_artifacts
-```
+## Why This Project Matters
 
-Advanced forecasting:
+Long-run public datasets contain real shocks, methodology changes, sparse historical coverage, source revisions, and model failures. A raw anomaly score is not enough.
 
-```bash
-python main.py list_forecasters
-python main.py backtest_advanced
-```
+ContinuityBreakDetector shows how to structure this kind of analysis so claims remain inspectable: deterministic computation first, artifact review before interpretation, optional ML/LLM layers kept outside the core method, and reproducible artifacts at every step.
 
-Paper drafting from an existing study:
-
-```bash
-python main.py draft_paper --study-path studies/backtests/<study_id>
-```
-
-## Commands
-
-- `python main.py ingest`
-- `python main.py normalize`
-- `python main.py compute_statistics`
-- `python main.py backtest`
-- `python main.py backtest_advanced`
-- `python main.py list_forecasters`
-- `python main.py rank_breaks [--study-path <path>]`
-- `python main.py audit_candidates [--study-path <path>]`
-- `python main.py detect_artifacts [--study-path <path>]`
-- `python main.py analyze_agents [--study-path <path>]`
-- `python main.py lemonade_debug`
-- `python main.py draft_paper --study-path <path>`
-
-## Expected Outputs
-
-Generated outputs are local artifacts and are ignored by Git:
-
-- `data/raw/`
-- `data/processed/`
-- `studies/backtests/`
-- `publication/paper/`
-
-Safe synthetic examples are committed under [examples/](examples/).
-
-## Public Article
-
-A general-audience article is available at
-[publication/detecting-global-continuity-breaks.md](publication/detecting-global-continuity-breaks.md).
-
-## Development
-
-```bash
-make test
-make lint
-make format-check
-make quality
-make typecheck-basic
-make clean-generated
-make run-demo
-```
-
-`typecheck-basic` runs only if `mypy` is installed.
+The current conclusion is cautious: the pipeline detects known real-world shocks and likely data artifacts, but does not claim causal proof or an unexplained synchronized cross-domain break.
 
 ## Limitations
 
-- The pipeline detects statistical candidates, not causes.
-- Artifact filtering identifies risk indicators, not definitive proof that a
-  candidate is invalid.
-- Optional TimesFM and Chronos runs depend on local model checkouts and cached
-  model weights.
-- Optional LLM reports are interpretive aids and are not part of the
-  deterministic scientific method.
-- Public API schemas, rate limits, and availability can change.
+- The pipeline identifies statistical candidates, not causes.
+- Artifact filtering assigns risk indicators, not definitive labels.
+- Optional TimesFM and Chronos runs require separate local model environments.
+- Optional Lemonade reports are interpretive aids, not scientific evidence.
+- Public API schemas, coverage, and rate limits can change.
+- Broader claims require more data sources, source-level validation, and independent replication.
 
-## Research Conclusion
+## License
 
-The current workflow detects known real-world shocks and likely data artifacts.
-It does not currently identify an unexplained synchronized cross-domain
-continuity break. Any stronger claim would require additional source-level
-validation, broader data coverage, and independent replication.
-
-## Public Release Notes
-
-Real raw data, processed data, study outputs, SQLite files, model caches, and
-draft paper outputs are excluded from Git. The repository is intended to publish
-the reproducible pipeline, not large generated artifacts.
+No license file is currently included.

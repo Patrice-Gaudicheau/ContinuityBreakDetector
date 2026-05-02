@@ -71,8 +71,9 @@ def draft_paper(
 
     prompt = build_gpt_prompt(brief)
     runner = command_runner or run_gpt55_medium
+    command = ["injected-command-runner"] if command_runner is not None else default_gpt_command()
     try:
-        draft = runner(default_gpt_command(), prompt, 900)
+        draft = runner(command, prompt, 900)
     except Exception as exc:
         return PaperDraftResult(
             output_dir=paper_dir,

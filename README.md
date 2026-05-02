@@ -9,6 +9,21 @@ statistical signals, runs historical forecasting backtests, filters likely data
 artifacts, and can optionally produce local interpretation reports and research
 drafts.
 
+```mermaid
+flowchart LR
+    OWID["Our World in Data"] --> ING["Ingestion"]
+    WB["World Bank"] --> ING
+    ING --> NORM["Normalization (Parquet)"]
+    NORM --> STATS["Statistics<br/>deterministic core"]
+    STATS --> BACKTEST["Backtesting Engine<br/>deterministic core"]
+    BACKTEST --> FORECAST["Forecasting<br/>Deterministic + TimesFM + Chronos<br/>subprocess ML models"]
+    FORECAST --> RANK["Ranking"]
+    RANK --> AUDIT["Audit"]
+    AUDIT --> ARTIFACT["Artifact Detection"]
+    ARTIFACT --> LLM["Optional LLM Analysis<br/>Lemonade optional LLM layer"]
+    LLM --> PUB["Publication outputs"]
+```
+
 The project is designed as an auditable portfolio system: every stage writes
 files, metadata, and reproducible outputs. It does not claim proof of simulation,
 proof of unexplained influx, or causal certainty. Current study outputs indicate

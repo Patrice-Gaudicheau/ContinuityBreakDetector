@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import json
-import logging
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
 from continuity_break_detector.normalization.models import NormalizedRecord
+from continuity_break_detector.utils.logging import get_logger
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = get_logger(__name__)
 SOURCE_ID = "world_bank_wdi"
 INDICATORS = {"SP.POP.TOTL", "NY.GDP.MKTP.CD", "NY.GDP.PCAP.CD"}
 

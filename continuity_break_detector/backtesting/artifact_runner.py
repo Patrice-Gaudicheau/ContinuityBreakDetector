@@ -9,6 +9,9 @@ from continuity_break_detector.backtesting.artifacts import (
 )
 from continuity_break_detector.backtesting.study import STUDIES_DIR
 from continuity_break_detector.backtesting.study_discovery import resolve_study_path
+from continuity_break_detector.utils.logging import get_logger
+
+LOGGER = get_logger(__name__)
 
 
 def main() -> int:
@@ -23,11 +26,11 @@ def main() -> int:
         selected_study,
         parameters=ArtifactParameters(),
     )
-    print(f"study_path,{result.study_path}")
-    print(f"candidate_count,{result.candidate_count}")
-    print(f"likely_artifacts,{result.likely_count}")
-    print(f"possible_artifacts,{result.possible_count}")
-    print(f"low_artifact_risk,{result.low_count}")
+    LOGGER.info("study_path,%s", result.study_path)
+    LOGGER.info("candidate_count,%s", result.candidate_count)
+    LOGGER.info("likely_artifacts,%s", result.likely_count)
+    LOGGER.info("possible_artifacts,%s", result.possible_count)
+    LOGGER.info("low_artifact_risk,%s", result.low_count)
     return 0
 
 

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 
 import pandas as pd
 
-LOGGER = logging.getLogger(__name__)
+from continuity_break_detector.utils.logging import get_logger
+
+LOGGER = get_logger(__name__)
 SOURCE_ID = "owid"
 IDENTIFIER_COLUMNS = {"Entity", "Code", "Year"}
 

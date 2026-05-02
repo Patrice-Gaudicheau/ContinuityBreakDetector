@@ -9,6 +9,9 @@ from continuity_break_detector.backtesting.ranking import (
 )
 from continuity_break_detector.backtesting.study import STUDIES_DIR
 from continuity_break_detector.backtesting.study_discovery import resolve_study_path
+from continuity_break_detector.utils.logging import get_logger
+
+LOGGER = get_logger(__name__)
 
 
 def main() -> int:
@@ -29,11 +32,11 @@ def main() -> int:
             top_representative_limit=args.top_representative_limit,
         ),
     )
-    print(f"study_path,{result.study_path}")
-    print(f"all_candidates,{result.all_candidates}")
-    print(f"representative_candidates,{result.representative_candidates}")
-    print(f"top_year,{result.top_year}")
-    print(f"top_rank_score,{result.top_rank_score}")
+    LOGGER.info("study_path,%s", result.study_path)
+    LOGGER.info("all_candidates,%s", result.all_candidates)
+    LOGGER.info("representative_candidates,%s", result.representative_candidates)
+    LOGGER.info("top_year,%s", result.top_year)
+    LOGGER.info("top_rank_score,%s", result.top_rank_score)
     return 0
 
 

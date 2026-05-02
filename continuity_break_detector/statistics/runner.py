@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import argparse
-import logging
 from dataclasses import dataclass
 from pathlib import Path
 
+from continuity_break_detector.config import ROLLING_STATISTICS_WINDOW
 from continuity_break_detector.statistics.breaks import add_break_scores
 from continuity_break_detector.statistics.features import add_statistical_features
 from continuity_break_detector.storage.parquet import read_parquet, write_parquet
+from continuity_break_detector.utils.logging import get_logger
 from continuity_break_detector.utils.paths import PROJECT_ROOT
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = get_logger(__name__)
 NORMALIZED_DIR = PROJECT_ROOT / "data" / "processed" / "normalized"
 STATISTICS_DIR = PROJECT_ROOT / "data" / "processed" / "statistics"
 
@@ -28,7 +29,7 @@ def run_statistics(
     *,
     normalized_dir: Path = NORMALIZED_DIR,
     output_dir: Path = STATISTICS_DIR,
-    window: int = 10,
+    window: int = ROLLING_STATISTICS_WINDOW,
 ) -> list[StatisticsResult]:
     results: list[StatisticsResult] = []
     if not normalized_dir.exists():
@@ -59,22 +60,23 @@ def run_statistics(
 
 
 def print_summary(results: list[StatisticsResult]) -> None:
-    print("source_id,metric,rows_written,warnings_count")
+    LOGGER.info("source_id,metric,rows_written,warnings_count")
     for result in results:
-        print(f"{result.source_id},{result.metric},{result.rows_written},{result.warnings_count}")
+        LOGGER.info(
+            "%s,%s,%s,%s",
+            result.source_id,
+            result.metric,
+            result.rows_written,
+            result.warnings_count,
+        )
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Compute deterministic statistical signals.")
     parser.add_argument("--normalized-dir", type=Path, default=NORMALIZED_DIR)
     parser.add_argument("--output-dir", type=Path, default=STATISTICS_DIR)
-    parser.add_argument("--window", type=int, default=10)
-    parser.add_argument("--log-level", default="INFO")
+    parser.add_argument("--window", type=int, default=ROLLING_STATISTICS_WINDOW)
     args = parser.parse_args()
-    logging.basicConfig(
-        level=getattr(logging, str(args.log_level).upper(), logging.INFO),
-        format="%(levelname)s %(name)s: %(message)s",
-    )
     results = run_statistics(
         normalized_dir=args.normalized_dir,
         output_dir=args.output_dir,

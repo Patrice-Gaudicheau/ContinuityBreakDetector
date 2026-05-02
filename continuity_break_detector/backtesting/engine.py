@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-import logging
 from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
 
+from continuity_break_detector.config import FORECAST_HORIZON, MIN_SERIES_LENGTH, TRAIN_WINDOW_YEARS
 from continuity_break_detector.forecasting.base import ForecasterAdapter, ForecastingError
 from continuity_break_detector.forecasting.registry import deterministic_forecaster_ids
+from continuity_break_detector.utils.logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 FORECAST_ERROR_COLUMNS = [
     "source_id",
@@ -30,9 +31,9 @@ FORECAST_ERROR_COLUMNS = [
 def backtest_metric(
     df: pd.DataFrame,
     *,
-    train_window_years: int = 20,
-    forecast_horizon_years: int = 5,
-    minimum_series_length: int = 30,
+    train_window_years: int = TRAIN_WINDOW_YEARS,
+    forecast_horizon_years: int = FORECAST_HORIZON,
+    minimum_series_length: int = MIN_SERIES_LENGTH,
     forecasters: Sequence[ForecasterAdapter] | None = None,
     disabled_forecasters: set[str] | None = None,
 ) -> pd.DataFrame:

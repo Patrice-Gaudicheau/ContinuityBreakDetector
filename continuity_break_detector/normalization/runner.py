@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import logging
 import re
 from collections.abc import Callable
 from pathlib import Path
@@ -11,9 +10,10 @@ import pandas as pd
 from continuity_break_detector.normalization import arxiv, crossref, openalex, owid, world_bank
 from continuity_break_detector.normalization.models import NormalizationResult
 from continuity_break_detector.storage.parquet import write_parquet
+from continuity_break_detector.utils.logging import get_logger
 from continuity_break_detector.utils.paths import PROJECT_ROOT, RAW_DATA_DIR
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = get_logger(__name__)
 NORMALIZED_DIR = PROJECT_ROOT / "data" / "processed" / "normalized"
 Normalizer = Callable[..., pd.DataFrame]
 WarningCounter = Callable[[pd.DataFrame], int]
@@ -57,9 +57,15 @@ def run_normalization(
 
 
 def print_summary(results: list[NormalizationResult]) -> None:
-    print("source_id,metric,rows_written,warnings_count")
+    LOGGER.info("source_id,metric,rows_written,warnings_count")
     for result in results:
-        print(f"{result.source_id},{result.metric},{result.rows_written},{result.warnings_count}")
+        LOGGER.info(
+            "%s,%s,%s,%s",
+            result.source_id,
+            result.metric,
+            result.rows_written,
+            result.warnings_count,
+        )
 
 
 def safe_metric_filename(metric: str) -> str:
@@ -71,12 +77,7 @@ def main() -> int:
     parser.add_argument("--raw-dir", type=Path, default=RAW_DATA_DIR)
     parser.add_argument("--output-dir", type=Path, default=NORMALIZED_DIR)
     parser.add_argument("--interpolate", action="store_true")
-    parser.add_argument("--log-level", default="INFO")
     args = parser.parse_args()
-    logging.basicConfig(
-        level=getattr(logging, str(args.log_level).upper(), logging.INFO),
-        format="%(levelname)s %(name)s: %(message)s",
-    )
     results = run_normalization(
         raw_dir=args.raw_dir,
         output_dir=args.output_dir,

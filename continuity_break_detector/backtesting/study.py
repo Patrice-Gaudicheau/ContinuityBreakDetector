@@ -15,6 +15,13 @@ from continuity_break_detector.backtesting.anomalies import build_anomalies
 from continuity_break_detector.backtesting.domains import build_cross_domain_breaks
 from continuity_break_detector.backtesting.engine import backtest_metric
 from continuity_break_detector.backtesting.models import MODEL_NAMES
+from continuity_break_detector.config import (
+    ANOMALY_WINDOW,
+    ANOMALY_Z_THRESHOLD,
+    FORECAST_HORIZON,
+    MIN_SERIES_LENGTH,
+    TRAIN_WINDOW_YEARS,
+)
 from continuity_break_detector.storage.parquet import read_parquet, write_parquet
 from continuity_break_detector.utils.paths import PROJECT_ROOT, ensure_directory
 
@@ -24,11 +31,11 @@ STUDIES_DIR = PROJECT_ROOT / "studies" / "backtests"
 
 @dataclass(frozen=True)
 class BacktestParameters:
-    train_window_years: int = 20
-    forecast_horizon_years: int = 5
-    minimum_series_length: int = 30
-    anomaly_window: int = 10
-    anomaly_threshold: float = 2.5
+    train_window_years: int = TRAIN_WINDOW_YEARS
+    forecast_horizon_years: int = FORECAST_HORIZON
+    minimum_series_length: int = MIN_SERIES_LENGTH
+    anomaly_window: int = ANOMALY_WINDOW
+    anomaly_threshold: float = ANOMALY_Z_THRESHOLD
 
     def to_dict(self) -> dict[str, int | float]:
         return {

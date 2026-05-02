@@ -4,6 +4,9 @@ import argparse
 from pathlib import Path
 
 from continuity_break_detector.publication.paper import DEFAULT_OUTPUT_DIR, draft_paper
+from continuity_break_detector.utils.logging import get_logger
+
+LOGGER = get_logger(__name__)
 
 
 def main() -> int:
@@ -15,17 +18,17 @@ def main() -> int:
     try:
         result = draft_paper(study_path=args.study_path, output_dir=args.output_dir)
     except Exception as exc:
-        print(f"Paper drafting failed before GPT step: {exc}")
+        LOGGER.error("Paper drafting failed before GPT step: %s", exc)
         return 1
 
-    print(f"study_path,{args.study_path}")
-    print(f"output_dir,{result.output_dir}")
-    print(f"source_snapshot,{result.snapshot_path}")
+    LOGGER.info("study_path,%s", args.study_path)
+    LOGGER.info("output_dir,%s", result.output_dir)
+    LOGGER.info("source_snapshot,%s", result.snapshot_path)
     if result.gpt_succeeded:
-        print(f"draft,{result.draft_path}")
-        print(f"metadata,{result.metadata_path}")
+        LOGGER.info("draft,%s", result.draft_path)
+        LOGGER.info("metadata,%s", result.metadata_path)
         return 0
-    print(f"GPT-5.5 drafting failed: {result.error}")
+    LOGGER.error("GPT-5.5 drafting failed: %s", result.error)
     return 1
 
 

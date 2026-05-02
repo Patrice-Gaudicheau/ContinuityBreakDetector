@@ -23,6 +23,7 @@ from continuity_break_detector.agents.prompts import (
 )
 from continuity_break_detector.backtesting.study import STUDIES_DIR
 from continuity_break_detector.backtesting.study_discovery import resolve_study_path
+from continuity_break_detector.utils.logging import get_logger
 from continuity_break_detector.utils.paths import ensure_directory
 
 REQUIRED_INPUT_FILES = [
@@ -33,6 +34,8 @@ REQUIRED_INPUT_FILES = [
     "summary.json",
     "provenance.json",
 ]
+
+LOGGER = get_logger(__name__)
 
 
 @dataclass(frozen=True)
@@ -460,16 +463,16 @@ def main() -> int:
             database_path=args.database_path,
         )
     except LemonadeError as exc:
-        print(f"Lemonade unavailable or returned no usable content: {exc}")
+        LOGGER.error("Lemonade unavailable or returned no usable content: %s", exc)
         return 1
     except Exception as exc:
-        print(f"Agent analysis failed: {exc}")
+        LOGGER.error("Agent analysis failed: %s", exc)
         return 1
 
-    print(f"study_path,{result.study_path}")
-    print(f"run_id,{result.run_id}")
-    print(f"agents_completed,{result.agents_completed}")
-    print(f"output_directory,{result.output_dir}")
+    LOGGER.info("study_path,%s", result.study_path)
+    LOGGER.info("run_id,%s", result.run_id)
+    LOGGER.info("agents_completed,%s", result.agents_completed)
+    LOGGER.info("output_directory,%s", result.output_dir)
     return 0
 
 

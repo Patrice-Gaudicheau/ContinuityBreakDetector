@@ -3,8 +3,12 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from continuity_break_detector.config import ROLLING_STATISTICS_WINDOW
 
-def add_statistical_features(df: pd.DataFrame, *, window: int = 10) -> pd.DataFrame:
+
+def add_statistical_features(
+    df: pd.DataFrame, *, window: int = ROLLING_STATISTICS_WINDOW
+) -> pd.DataFrame:
     if df.empty:
         return df.copy()
     frames: list[pd.DataFrame] = []

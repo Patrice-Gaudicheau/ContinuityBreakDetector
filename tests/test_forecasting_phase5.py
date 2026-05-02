@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import sys
 from pathlib import Path
 
@@ -101,12 +102,13 @@ def test_adapter_unavailable_when_python_executable_missing(monkeypatch) -> None
     assert "does not exist" in status.reason
 
 
-def test_list_forecasters_handles_unavailable_workers(monkeypatch, capsys) -> None:
+def test_list_forecasters_handles_unavailable_workers(monkeypatch, caplog) -> None:
+    caplog.set_level(logging.INFO)
     monkeypatch.setenv("CBD_TIMESFM_PYTHON", "/path/that/does/not/exist")
     monkeypatch.setenv("CBD_CHRONOS_PYTHON", "/path/that/also/does/not/exist")
 
     assert list_forecasters_main() == 0
-    output = capsys.readouterr().out
+    output = caplog.text
 
     assert "naive_last_value: available" in output
     assert "timesfm: unavailable" in output

@@ -9,6 +9,9 @@ dependencies = [
   "pyarrow",
 ]
 
+[project.scripts]
+cbd = "continuity_break_detector.main:main"
+
 [project.optional-dependencies]
 test = [
   "pytest",

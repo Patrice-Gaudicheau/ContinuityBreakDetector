@@ -7,12 +7,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from continuity_break_detector.config import DEFAULT_FORECASTER_TIMEOUT_SECONDS
 from continuity_break_detector.forecasting.base import ForecastingError, ensure_forecast_length
+from continuity_break_detector.utils.logging import get_logger
 from continuity_break_detector.utils.paths import PROJECT_ROOT
 
 DEFAULT_TIMESFM_PYTHON = Path("~/projects/timesfm/.venv/bin/python")
 DEFAULT_CHRONOS_PYTHON = Path("~/projects/chronos-forecasting/.venv/bin/python")
-DEFAULT_TIMEOUT_SECONDS = 300.0
+
+LOGGER = get_logger(__name__)
 
 
 @dataclass(frozen=True)
@@ -22,7 +25,9 @@ class WorkerResult:
 
 
 def timeout_seconds() -> float:
-    return float(os.environ.get("CBD_FORECASTER_TIMEOUT_SECONDS", DEFAULT_TIMEOUT_SECONDS))
+    return float(
+        os.environ.get("CBD_FORECASTER_TIMEOUT_SECONDS", DEFAULT_FORECASTER_TIMEOUT_SECONDS)
+    )
 
 
 def timesfm_python() -> Path:
@@ -80,6 +85,8 @@ def run_worker_forecast(
 
     stdout = completed.stdout.strip()
     stderr = completed.stderr.strip()
+    if stderr:
+        LOGGER.warning("%s worker stderr: %s", model, stderr)
     if not stdout:
         detail = f"; stderr: {stderr}" if stderr else ""
         raise ForecastingError(f"{model} worker returned no JSON output{detail}")

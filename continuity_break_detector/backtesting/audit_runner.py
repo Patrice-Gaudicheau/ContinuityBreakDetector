@@ -6,6 +6,9 @@ from pathlib import Path
 from continuity_break_detector.backtesting.audit import AuditParameters, audit_study
 from continuity_break_detector.backtesting.study import STUDIES_DIR
 from continuity_break_detector.backtesting.study_discovery import resolve_study_path
+from continuity_break_detector.utils.logging import get_logger
+
+LOGGER = get_logger(__name__)
 
 
 def main() -> int:
@@ -24,11 +27,11 @@ def main() -> int:
             top_list_limit=args.top_list_limit,
         ),
     )
-    print(f"study_path,{result.study_path}")
-    print(f"candidate_count,{result.candidate_count}")
-    print(f"strong_count,{result.strong_count}")
-    print(f"moderate_count,{result.moderate_count}")
-    print(f"weak_count,{result.weak_count}")
+    LOGGER.info("study_path,%s", result.study_path)
+    LOGGER.info("candidate_count,%s", result.candidate_count)
+    LOGGER.info("strong_count,%s", result.strong_count)
+    LOGGER.info("moderate_count,%s", result.moderate_count)
+    LOGGER.info("weak_count,%s", result.weak_count)
     return 0
 
 

@@ -9,17 +9,27 @@ from continuity_break_detector.backtesting.study import (
     BacktestParameters,
     run_backtest_study,
 )
+from continuity_break_detector.config import (
+    ANOMALY_WINDOW,
+    ANOMALY_Z_THRESHOLD,
+    FORECAST_HORIZON,
+    MIN_SERIES_LENGTH,
+    TRAIN_WINDOW_YEARS,
+)
+from continuity_break_detector.utils.logging import get_logger
+
+LOGGER = get_logger(__name__)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run deterministic historical backtests.")
     parser.add_argument("--input-dir", type=Path, default=NORMALIZED_DIR)
     parser.add_argument("--studies-dir", type=Path, default=STUDIES_DIR)
-    parser.add_argument("--train-window-years", type=int, default=20)
-    parser.add_argument("--forecast-horizon-years", type=int, default=5)
-    parser.add_argument("--minimum-series-length", type=int, default=30)
-    parser.add_argument("--anomaly-window", type=int, default=10)
-    parser.add_argument("--anomaly-threshold", type=float, default=2.5)
+    parser.add_argument("--train-window-years", type=int, default=TRAIN_WINDOW_YEARS)
+    parser.add_argument("--forecast-horizon-years", type=int, default=FORECAST_HORIZON)
+    parser.add_argument("--minimum-series-length", type=int, default=MIN_SERIES_LENGTH)
+    parser.add_argument("--anomaly-window", type=int, default=ANOMALY_WINDOW)
+    parser.add_argument("--anomaly-threshold", type=float, default=ANOMALY_Z_THRESHOLD)
     args = parser.parse_args()
 
     result = run_backtest_study(
@@ -33,11 +43,11 @@ def main() -> int:
             anomaly_threshold=args.anomaly_threshold,
         ),
     )
-    print(f"study_path,{result.output_dir}")
-    print(f"metrics_processed,{result.metrics_processed}")
-    print(f"forecast_error_rows,{result.forecast_error_rows}")
-    print(f"anomalies,{result.anomaly_rows}")
-    print(f"cross_domain_breaks,{result.cross_domain_break_rows}")
+    LOGGER.info("study_path,%s", result.output_dir)
+    LOGGER.info("metrics_processed,%s", result.metrics_processed)
+    LOGGER.info("forecast_error_rows,%s", result.forecast_error_rows)
+    LOGGER.info("anomalies,%s", result.anomaly_rows)
+    LOGGER.info("cross_domain_breaks,%s", result.cross_domain_break_rows)
     return 0
 
 

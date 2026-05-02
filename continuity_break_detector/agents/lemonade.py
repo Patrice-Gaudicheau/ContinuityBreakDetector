@@ -6,6 +6,11 @@ from typing import Any
 
 import httpx
 
+from continuity_break_detector.config import DEFAULT_LEMONADE_TIMEOUT_SECONDS
+from continuity_break_detector.utils.logging import get_logger
+
+LOGGER = get_logger(__name__)
+
 
 class LemonadeError(RuntimeError):
     pass
@@ -15,7 +20,7 @@ class LemonadeError(RuntimeError):
 class LemonadeClient:
     base_url: str
     api_key: str | None = None
-    timeout_seconds: float = 300.0
+    timeout_seconds: float = DEFAULT_LEMONADE_TIMEOUT_SECONDS
 
     def chat(self, *, model: str, system_prompt: str, user_prompt: str) -> str:
         data = self._chat_json(
@@ -213,7 +218,7 @@ def safe_response_metadata(
 
 def print_debug_metadata(status_code: int, data: dict[str, Any]) -> None:
     metadata = safe_response_metadata(data, status_code=status_code)
-    print(f"lemonade_debug_metadata,{metadata}")
+    LOGGER.info("lemonade_debug_metadata,%s", metadata)
 
 
 def _looks_like_unsupported_template_kwargs(response: httpx.Response) -> bool:

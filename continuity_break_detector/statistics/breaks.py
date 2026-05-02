@@ -3,8 +3,10 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from continuity_break_detector.config import ROLLING_STATISTICS_WINDOW
 
-def add_break_scores(df: pd.DataFrame, *, window: int = 10) -> pd.DataFrame:
+
+def add_break_scores(df: pd.DataFrame, *, window: int = ROLLING_STATISTICS_WINDOW) -> pd.DataFrame:
     if df.empty:
         return df.copy()
     frames: list[pd.DataFrame] = []
@@ -28,6 +30,8 @@ def add_break_scores(df: pd.DataFrame, *, window: int = 10) -> pd.DataFrame:
     return pd.concat(frames, ignore_index=True)
 
 
-def detect_break_candidates(df: pd.DataFrame, *, window: int = 10) -> pd.DataFrame:
+def detect_break_candidates(
+    df: pd.DataFrame, *, window: int = ROLLING_STATISTICS_WINDOW
+) -> pd.DataFrame:
     scored = add_break_scores(df, window=window)
     return scored[scored["break_score"].notna()].copy()

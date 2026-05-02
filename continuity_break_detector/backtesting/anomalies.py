@@ -3,6 +3,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from continuity_break_detector.config import ANOMALY_WINDOW, ANOMALY_Z_THRESHOLD
+
 ANOMALY_COLUMNS = [
     "source_id",
     "metric",
@@ -19,8 +21,8 @@ ANOMALY_COLUMNS = [
 def build_anomalies(
     forecast_errors: pd.DataFrame,
     *,
-    window: int = 10,
-    threshold: float = 2.5,
+    window: int = ANOMALY_WINDOW,
+    threshold: float = ANOMALY_Z_THRESHOLD,
 ) -> pd.DataFrame:
     rows: list[dict[str, object]] = []
     if forecast_errors.empty:

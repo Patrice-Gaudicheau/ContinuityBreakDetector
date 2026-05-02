@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-import logging
 import time
 from collections.abc import Mapping
 from typing import Any
 
 import httpx
 
-LOGGER = logging.getLogger(__name__)
+from continuity_break_detector.utils.logging import get_logger
+
+LOGGER = get_logger(__name__)
 DEFAULT_USER_AGENT = "ContinuityBreakDetector/0.1"
 
 

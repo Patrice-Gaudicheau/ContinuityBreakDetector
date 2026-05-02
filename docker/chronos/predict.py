@@ -6,6 +6,7 @@ import math
 import os
 import sys
 from numbers import Real
+from pathlib import Path
 from typing import Any
 
 DEFAULT_MODEL_ID = "amazon/chronos-bolt-small"
@@ -48,12 +49,16 @@ def predict(series: list[float], horizon: int) -> dict[str, Any]:
         from chronos import BaseChronosPipeline
 
         model_id = os.environ.get("CBD_CHRONOS_MODEL_ID", DEFAULT_MODEL_ID)
+        cache_preexisting = is_model_cached(model_id)
+        log_cache_status(model_id, cache_preexisting)
         pipeline = BaseChronosPipeline.from_pretrained(
             model_id,
             device_map="cpu",
             local_files_only=False,
         )
         raw = pipeline.predict(torch.tensor(series, dtype=torch.float32), prediction_length=horizon)
+        if not cache_preexisting and is_model_cached(model_id):
+            print(f"{WORKER_NAME} model cache populated: {model_id}", file=sys.stderr)
     if raw.ndim == 3:
         if raw.shape[1] > 1:
             point = raw[0, raw.shape[1] // 2, :horizon]
@@ -68,6 +73,17 @@ def predict(series: list[float], horizon: int) -> dict[str, Any]:
         "horizon": horizon,
         "forecast": forecast,
     }
+
+
+def is_model_cached(model_id: str) -> bool:
+    cache_root = Path(os.environ.get("HF_HOME", "/root/.cache/huggingface"))
+    model_dir = cache_root / "hub" / f"models--{model_id.replace('/', '--')}"
+    return model_dir.exists() and any(model_dir.iterdir())
+
+
+def log_cache_status(model_id: str, cached: bool) -> None:
+    status = "hit" if cached else "miss"
+    print(f"{WORKER_NAME} Hugging Face cache {status}: {model_id}", file=sys.stderr)
 
 
 def error_response(error_type: str, message: str) -> dict[str, Any]:

@@ -148,6 +148,16 @@ python -m continuity_break_detector.main ml-predict --worker chronos --series "1
 The first prediction run may download model weights at runtime. The core Python
 environment still does not install or import ML worker dependencies.
 
+Docker Compose mounts a shared named volume, `hf_cache`, at
+`/root/.cache/huggingface` in both ML worker containers. The first full smoke or
+prediction run downloads model weights into that volume at runtime; later runs
+reuse the cached files instead of baking weights into images or requiring host
+path configuration. To intentionally clear the model cache:
+
+```bash
+docker compose down -v
+```
+
 ## Pipeline Overview
 
 - **Ingestion**: fetches public-source data and stores raw responses with metadata.

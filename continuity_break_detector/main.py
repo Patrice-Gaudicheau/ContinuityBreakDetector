@@ -15,6 +15,7 @@ from continuity_break_detector.forecasting.runner import (
     list_forecasters_main,
 )
 from continuity_break_detector.ingestion.runner import main as ingestion_main
+from continuity_break_detector.ml_break_analysis_runner import main as ml_break_analysis_main
 from continuity_break_detector.ml_predict_runner import main as ml_predict_main
 from continuity_break_detector.ml_worker_runner import main as ml_worker_main
 from continuity_break_detector.normalization.runner import main as normalization_main
@@ -42,6 +43,7 @@ COMMANDS: dict[str, Callable[[], int]] = {
     "ml-smoke": ml_worker_main,
     "ml-predict": ml_predict_main,
     "predict-series": series_prediction_main,
+    "analyze-series": ml_break_analysis_main,
 }
 
 

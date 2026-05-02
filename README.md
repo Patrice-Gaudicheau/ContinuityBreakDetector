@@ -228,21 +228,23 @@ worker, and prints one structured JSON response:
 ```
 
 ```bash
-python -m continuity_break_detector.main predict-series --worker timesfm --input examples/series.json --horizon 3
-python -m continuity_break_detector.main predict-series --worker chronos --input examples/series.json --horizon 3
+python -m continuity_break_detector.main predict-series --worker timesfm --input examples/series.json --horizon 3 --mode one-shot
+python -m continuity_break_detector.main predict-series --worker chronos --input examples/series.json --horizon 3 --mode daemon
 ```
 
-The workers remain optional Docker backends. The first run may populate the
-Hugging Face cache volume; normal deterministic workflows do not require these
-models.
+The default mode is `one-shot`, which preserves the existing behavior. The
+experimental `daemon` mode uses `DockerWarmForecastClient` for a warm worker
+session. The workers remain optional Docker backends. The first run may populate
+the Hugging Face cache volume; normal deterministic workflows do not require
+these models.
 
 `analyze-series` extends `predict-series` by appending the ML forecast to the
 historical input and running the existing structural break scoring adapter over
 the combined historical-plus-forecast series:
 
 ```bash
-python -m continuity_break_detector.main analyze-series --worker timesfm --input examples/series.json --horizon 3
-python -m continuity_break_detector.main analyze-series --worker chronos --input examples/series.json --horizon 3
+python -m continuity_break_detector.main analyze-series --worker timesfm --input examples/series.json --horizon 3 --mode one-shot
+python -m continuity_break_detector.main analyze-series --worker chronos --input examples/series.json --horizon 3 --mode daemon
 ```
 
 This command returns the forecast and a compact continuity-break analysis in one

@@ -10,11 +10,15 @@ from continuity_break_detector.forecast_client import (
     ForecastResult,
     default_forecast_client,
 )
+from continuity_break_detector.forecast_daemon_client import DockerWarmForecastClient
 from continuity_break_detector.prediction_schema import (
     PredictionSchemaError,
     validate_horizon,
     validate_numeric_series,
 )
+
+DEFAULT_PREDICTION_MODE = "one-shot"
+PREDICTION_MODES = frozenset({DEFAULT_PREDICTION_MODE, "daemon"})
 
 
 class SeriesPredictionError(ValueError):
@@ -68,9 +72,32 @@ def predict_series_with_worker(
         raise SeriesPredictionError("validation_error", str(exc)) from exc
 
 
+def validate_prediction_mode(mode: str) -> str:
+    if mode not in PREDICTION_MODES:
+        raise SeriesPredictionError(
+            "validation_error",
+            "mode must be one of: one-shot, daemon",
+        )
+    return mode
+
+
+def forecast_client_for_mode(mode: str) -> ForecastClient:
+    validated_mode = validate_prediction_mode(mode)
+    if validated_mode == "daemon":
+        return DockerWarmForecastClient()
+    return default_forecast_client()
+
+
+def close_forecast_client(client: ForecastClient) -> None:
+    close = getattr(client, "close", None)
+    if callable(close):
+        close()
+
+
 def build_success_response(
     *,
     worker: str,
+    mode: str = DEFAULT_PREDICTION_MODE,
     series_input: SeriesInput,
     prediction: ForecastResult,
     horizon: int,
@@ -78,6 +105,7 @@ def build_success_response(
     return {
         "status": "ok",
         "worker": worker,
+        "mode": mode,
         "input": {
             "points": len(series_input.series),
             "metadata": series_input.metadata,

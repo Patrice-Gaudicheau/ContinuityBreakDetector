@@ -50,9 +50,11 @@ The ML layer is optional:
 - `ml-predict` calls a worker with inline series input.
 - `ml-daemon-predict` starts an experimental warm worker session and can repeat
   predictions without restarting the container for each request.
-- `predict-series` reads a JSON series file and returns a forecast.
+- `predict-series` reads a JSON series file and returns a forecast. It defaults
+  to `--mode one-shot` and can opt into `--mode daemon`.
 - `analyze-series` appends a forecast and runs the existing break detector over
-  the historical-plus-forecast series.
+  the historical-plus-forecast series. It defaults to `--mode one-shot` and can
+  opt into `--mode daemon`.
 
 ## Protocol
 
@@ -92,5 +94,5 @@ loads the model lazily on the first request and reuses it for later requests in
 that session.
 
 One-shot `DockerForecastClient` remains the default. Daemon mode is experimental
-and currently exposed through `ml-daemon-predict`; it is not used by regular
-pipeline commands yet.
+and can be selected explicitly with `ml-daemon-predict`, `predict-series --mode
+daemon`, and `analyze-series --mode daemon`.

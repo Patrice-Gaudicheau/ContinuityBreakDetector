@@ -100,9 +100,10 @@ def test_cli_success_prints_only_json_to_stdout(monkeypatch, tmp_path: Path, cap
         encoding="utf-8",
     )
 
-    def fake_predict(worker, series, horizon, timeout_seconds=120.0):
+    def fake_predict(worker, series, horizon, timeout_seconds=120.0, client=None):
         return prediction_result(worker=worker, forecast=[4.0], stderr="worker diagnostic")
 
+    monkeypatch.setattr(ml_break_analysis_runner, "forecast_client_for_mode", lambda mode: object())
     monkeypatch.setattr(ml_break_analysis_runner, "predict_series_with_worker", fake_predict)
     monkeypatch.setattr(
         "sys.argv",
@@ -122,6 +123,81 @@ def test_cli_success_prints_only_json_to_stdout(monkeypatch, tmp_path: Path, cap
     output = json.loads(captured.out)
 
     assert output["status"] == "ok"
+    assert output["mode"] == "one-shot"
     assert output["prediction"]["forecast"] == [4.0]
     assert output["analysis"]["combined_points"] == 4
     assert "worker diagnostic" in captured.err
+
+
+def test_analyze_series_cli_daemon_mode_uses_selected_client(
+    monkeypatch, tmp_path: Path, capsys
+) -> None:
+    input_path = tmp_path / "series.json"
+    input_path.write_text(
+        json.dumps({"series": [1.0, 2.0, 3.0], "metadata": {"name": "demo"}}),
+        encoding="utf-8",
+    )
+    calls = []
+
+    class FakeClient:
+        def close(self) -> None:
+            calls.append(("close",))
+
+    def fake_factory(mode):
+        calls.append(("factory", mode))
+        return FakeClient()
+
+    def fake_predict(worker, series, horizon, timeout_seconds=120.0, client=None):
+        calls.append(("predict", worker, series, horizon, timeout_seconds, type(client).__name__))
+        return prediction_result(worker=worker, forecast=[4.0])
+
+    monkeypatch.setattr(ml_break_analysis_runner, "forecast_client_for_mode", fake_factory)
+    monkeypatch.setattr(ml_break_analysis_runner, "predict_series_with_worker", fake_predict)
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "cbd",
+            "--worker",
+            "chronos",
+            "--input",
+            str(input_path),
+            "--horizon",
+            "1",
+            "--mode",
+            "daemon",
+        ],
+    )
+
+    assert ml_break_analysis_runner.main() == 0
+    output = json.loads(capsys.readouterr().out)
+
+    assert output["mode"] == "daemon"
+    assert output["worker"] == "chronos"
+    assert ("factory", "daemon") in calls
+    assert ("predict", "chronos", [1.0, 2.0, 3.0], 1, 120.0, "FakeClient") in calls
+    assert ("close",) in calls
+
+
+def test_analyze_series_cli_rejects_invalid_mode(monkeypatch, tmp_path: Path, capsys) -> None:
+    input_path = tmp_path / "series.json"
+    input_path.write_text(json.dumps({"series": [1.0]}), encoding="utf-8")
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "cbd",
+            "--worker",
+            "timesfm",
+            "--input",
+            str(input_path),
+            "--horizon",
+            "1",
+            "--mode",
+            "invalid",
+        ],
+    )
+
+    assert ml_break_analysis_runner.main() == 2
+    output = json.loads(capsys.readouterr().out)
+
+    assert output["status"] == "error"
+    assert output["error"]["type"] == "validation_error"

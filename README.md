@@ -158,6 +158,28 @@ path configuration. To intentionally clear the model cache:
 docker compose down -v
 ```
 
+For pipeline-level use, `predict-series` reads a JSON file with a required
+`series` list and optional `metadata` object, invokes an isolated Docker ML
+worker, and prints one structured JSON response:
+
+```json
+{
+  "series": [1.0, 2.0, 3.0, 4.0],
+  "metadata": {
+    "name": "demo_series"
+  }
+}
+```
+
+```bash
+python -m continuity_break_detector.main predict-series --worker timesfm --input examples/series.json --horizon 3
+python -m continuity_break_detector.main predict-series --worker chronos --input examples/series.json --horizon 3
+```
+
+The workers remain optional Docker backends. The first run may populate the
+Hugging Face cache volume; normal deterministic workflows do not require these
+models.
+
 ## Pipeline Overview
 
 - **Ingestion**: fetches public-source data and stores raw responses with metadata.

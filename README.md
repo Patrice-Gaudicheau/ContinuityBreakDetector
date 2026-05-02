@@ -253,6 +253,30 @@ This command returns the forecast and a compact continuity-break analysis in one
 JSON object. The ML models remain optional Docker-backed components, and the
 first run may populate the Hugging Face cache volume.
 
+`batch-predict` reads multiple named series from one JSON file and sends them
+through one worker client session. Its default mode is `daemon`, because the
+command is intended for repeated predictions:
+
+```json
+{
+  "series": [
+    {"name": "stable_demo", "values": [1.0, 1.1, 1.2, 1.3]},
+    {"name": "break_demo", "values": [1.0, 1.1, 1.2, 4.8]}
+  ],
+  "metadata": {
+    "source": "examples"
+  }
+}
+```
+
+```bash
+python -m continuity_break_detector.main batch-predict --worker timesfm --input examples/batch_series.json --horizon 3 --mode daemon
+python -m continuity_break_detector.main batch-predict --worker chronos --input examples/batch_series.json --horizon 3 --mode daemon
+```
+
+`--mode one-shot` is available as a fallback or comparison path. Resource and
+concurrency controls for larger batches are still future work.
+
 ## Command Dependencies
 
 Commands that do not require Docker or ML packages:
@@ -269,6 +293,7 @@ Commands that require Docker when using the current ML backend:
 - `ml-predict`
 - `ml-daemon-predict`
 - `predict-series`
+- `batch-predict`
 - `analyze-series`
 - direct `docker compose run ... predict.py` worker calls
 

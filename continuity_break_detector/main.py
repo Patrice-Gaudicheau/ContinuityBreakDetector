@@ -9,6 +9,7 @@ from continuity_break_detector.backtesting.artifact_runner import main as artifa
 from continuity_break_detector.backtesting.audit_runner import main as audit_main
 from continuity_break_detector.backtesting.ranking_runner import main as ranking_main
 from continuity_break_detector.backtesting.runner import main as backtesting_main
+from continuity_break_detector.batch_prediction_runner import main as batch_prediction_main
 from continuity_break_detector.demo import main as demo_study_main
 from continuity_break_detector.forecasting.runner import (
     backtest_advanced_main,
@@ -45,6 +46,7 @@ COMMANDS: dict[str, Callable[[], int]] = {
     "ml-predict": ml_predict_main,
     "ml-daemon-predict": ml_daemon_predict_main,
     "predict-series": series_prediction_main,
+    "batch-predict": batch_prediction_main,
     "analyze-series": ml_break_analysis_main,
 }
 

@@ -52,6 +52,8 @@ The ML layer is optional:
   predictions without restarting the container for each request.
 - `predict-series` reads a JSON series file and returns a forecast. It defaults
   to `--mode one-shot` and can opt into `--mode daemon`.
+- `batch-predict` reads multiple named series and defaults to daemon mode so the
+  worker can stay warm across the batch.
 - `analyze-series` appends a forecast and runs the existing break detector over
   the historical-plus-forecast series. It defaults to `--mode one-shot` and can
   opt into `--mode daemon`.
@@ -95,4 +97,6 @@ that session.
 
 One-shot `DockerForecastClient` remains the default. Daemon mode is experimental
 and can be selected explicitly with `ml-daemon-predict`, `predict-series --mode
-daemon`, and `analyze-series --mode daemon`.
+daemon`, and `analyze-series --mode daemon`. `batch-predict` defaults to daemon
+mode because it is specifically intended for repeated predictions in one worker
+session.

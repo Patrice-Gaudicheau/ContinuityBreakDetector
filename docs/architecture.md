@@ -25,8 +25,11 @@ Generated data directories are intentionally ignored by Git.
 - `statistics/`: deterministic feature and break calculations.
 - `backtesting/`: rolling forecast-error studies, ranking, candidate audit, and
   data-artifact filtering.
-- `forecasting/`: deterministic adapters plus optional TimesFM and Chronos
-  subprocess workers.
+- `forecasting/`: deterministic adapters and legacy subprocess-worker helpers.
+- `forecast_client.py`: optional ML prediction access through Docker-backed
+  TimesFM and Chronos workers.
+- `prediction_schema.py`: shared JSON request and response validation for ML
+  prediction workers and core callers.
 - `agents/`: optional local Lemonade-compatible interpretation reports.
 - `publication/`: factual extraction, tables, and optional paper drafting.
 - `storage/`: small file storage helpers.
@@ -50,3 +53,8 @@ The scientific pipeline is deterministic through artifact filtering. Optional
 LLM reports and paper drafting read the deterministic outputs but do not compute
 statistics or alter source data.
 
+Optional ML forecasting is also outside the deterministic boundary. The core
+pipeline calls it through `ForecastClient`; the current backend shells out to
+Docker Compose workers that communicate by JSON over stdin/stdout. See
+[ml_architecture.md](ml_architecture.md) and
+[worker_contract.md](worker_contract.md).

@@ -12,6 +12,8 @@ services:
     image: continuity-break-detector:timesfm-worker
     environment:
       CBD_TIMESFM_PYTHON: /usr/local/bin/python
+      CBD_RUN_ML_MODEL_SMOKE: ${CBD_RUN_ML_MODEL_SMOKE:-0}
+      CBD_TIMESFM_MODEL_ID: ${CBD_TIMESFM_MODEL_ID:-google/timesfm-1.0-200m-pytorch}
 
   chronos-worker:
     build:
@@ -20,3 +22,5 @@ services:
     image: continuity-break-detector:chronos-worker
     environment:
       CBD_CHRONOS_PYTHON: /usr/local/bin/python
+      CBD_RUN_ML_MODEL_SMOKE: ${CBD_RUN_ML_MODEL_SMOKE:-0}
+      CBD_CHRONOS_MODEL_ID: ${CBD_CHRONOS_MODEL_ID:-amazon/chronos-bolt-small}

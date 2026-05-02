@@ -91,6 +91,25 @@ Run the core tests and worker readiness commands:
 docker compose up
 ```
 
+Run import-level ML smoke tests inside the worker containers:
+
+```bash
+docker compose run --rm timesfm-worker python smoke_test.py
+docker compose run --rm chronos-worker python smoke_test.py
+```
+
+The Compose default is intentionally lightweight:
+
+- Docker core tests run the deterministic project test suite in the `core` container.
+- ML worker readiness checks only verify that the worker containers start.
+- ML smoke tests verify library imports and small CPU tensor operations.
+- Full model smoke tests may download model weights and run inference, so they are opt-in at runtime:
+
+```bash
+CBD_RUN_ML_MODEL_SMOKE=1 docker compose run --rm timesfm-worker python smoke_test.py
+CBD_RUN_ML_MODEL_SMOKE=1 docker compose run --rm chronos-worker python smoke_test.py
+```
+
 The ML worker containers are optional and experimental. They prepare isolated CPU Python environments and do not download model weights during build.
 
 ## Pipeline Overview

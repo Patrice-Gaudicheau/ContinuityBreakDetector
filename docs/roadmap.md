@@ -13,38 +13,40 @@ continuity-break detector. It is not a product roadmap.
 - Core CLI commands:
   - `ml-smoke`
   - `ml-predict`
+  - `ml-daemon-predict`
   - `predict-series`
   - `analyze-series`
 - `ForecastClient` abstraction for ML prediction access.
+- Experimental `DockerWarmForecastClient` daemon backend for repeated
+  predictions in one worker session.
 - Shared prediction schema module for request and response validation.
 - Pipeline-level forecast and forecast-plus-break-analysis commands.
 
 ## Current Limitations
 
-- The Docker backend starts an ephemeral container for each prediction command.
-- Models are loaded per container run.
-- Batch and backtest workloads would repeat startup and model-load cost.
+- The default Docker backend still starts an ephemeral container for each
+  prediction command.
+- `predict-series` and `analyze-series` still use one-shot prediction.
+- Daemon mode is available only through the experimental CLI/client path.
 - Worker logs include upstream library warnings and download progress on stderr.
 - Only the prediction contract is centralized; model-specific loading remains in
   each worker script.
 
-## Next Step: Warm Worker Daemon
+## Next Step: Batch/Backtest Integration
 
-The next planned step is a warm-worker-daemon backend behind `ForecastClient`.
-The daemon should keep a worker process and model instance alive across multiple
-prediction requests.
-
-Daemon mode is needed for batch and backtest workloads because those workloads
-may call forecasting many times. Reusing a loaded model should reduce repeated:
+The warm-worker daemon exists, but normal pipeline commands do not use it yet.
+The next step is to integrate daemon-backed forecasting into batch and backtest
+workloads where many predictions are made in one run. Reusing a loaded model
+should reduce repeated:
 
 - Docker container startup
 - Python interpreter startup
 - model import time
 - Hugging Face model loading
 
-The daemon should preserve the current JSON request and response contract. It
-should be an additional backend, not a replacement for the Docker one until the
-behavior is validated.
+The integration should preserve the current JSON request and response contract.
+Daemon mode should remain an additional backend until its lifecycle and failure
+behavior are validated under realistic batch workloads.
 
 ## Risks To Avoid
 

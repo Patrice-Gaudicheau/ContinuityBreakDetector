@@ -5,6 +5,8 @@ contract. The current entrypoints are:
 
 - `docker/timesfm/predict.py`
 - `docker/chronos/predict.py`
+- `docker/timesfm/daemon.py`
+- `docker/chronos/daemon.py`
 
 The contract is shared with the core through
 `continuity_break_detector.prediction_schema`.
@@ -19,6 +21,10 @@ Workers read exactly one JSON object from stdin.
   "horizon": 1
 }
 ```
+
+One-shot `predict.py` reads one JSON object and exits. Daemon `daemon.py` reads
+one JSON object per line and keeps running until stdin closes or it receives a
+shutdown command.
 
 Validation rules:
 
@@ -83,6 +89,7 @@ Known error types:
 ## stdout and stderr
 
 stdout is machine-readable and must contain only the response JSON object.
+Daemon mode writes one machine-readable JSON object per output line.
 
 stderr is for human diagnostics:
 
@@ -104,3 +111,21 @@ and forwarding diagnostics to stderr.
 The core `ForecastClient` does not raise for worker failures. It captures the
 return code, stdout, stderr, parsed response, and success state in a structured
 result.
+
+## Daemon Control
+
+Daemon mode supports a control request:
+
+```json
+{"command": "shutdown"}
+```
+
+The worker returns a status object and exits cleanly:
+
+```json
+{"worker": "timesfm", "status": "shutdown"}
+```
+
+Prediction requests in daemon mode use the same request, success, and error
+objects documented above. Invalid requests return JSON errors and do not crash
+the daemon.

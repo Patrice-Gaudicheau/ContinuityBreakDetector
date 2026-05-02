@@ -71,6 +71,28 @@ docker run --rm continuity-break-detector:core
 
 This container is intentionally lightweight and installs the project with its test dependencies only. It does not containerize the optional TimesFM or Chronos worker environments.
 
+## Optional ML Worker Containers
+
+The Docker Compose setup keeps the deterministic core image separate from experimental ML worker images:
+
+- `core` reuses the lightweight `python:3.12-slim` project Dockerfile and runs the existing test command by default.
+- `timesfm-worker` uses its own `python:3.11-slim` image with the TimesFM environment.
+- `chronos-worker` uses its own `python:3.11-slim` image with the Chronos environment.
+
+Build all images:
+
+```bash
+docker compose build
+```
+
+Run the core tests and worker readiness commands:
+
+```bash
+docker compose up
+```
+
+The ML worker containers are optional and experimental. They prepare isolated CPU Python environments and do not download model weights during build.
+
 ## Pipeline Overview
 
 - **Ingestion**: fetches public-source data and stores raw responses with metadata.

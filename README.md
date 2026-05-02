@@ -180,6 +180,19 @@ The workers remain optional Docker backends. The first run may populate the
 Hugging Face cache volume; normal deterministic workflows do not require these
 models.
 
+`analyze-series` extends `predict-series` by appending the ML forecast to the
+historical input and running the existing structural break scoring adapter over
+the combined historical-plus-forecast series:
+
+```bash
+python -m continuity_break_detector.main analyze-series --worker timesfm --input examples/series.json --horizon 3
+python -m continuity_break_detector.main analyze-series --worker chronos --input examples/series.json --horizon 3
+```
+
+This command returns the forecast and a compact continuity-break analysis in one
+JSON object. The ML models remain optional Docker-backed components, and the
+first run may populate the Hugging Face cache volume.
+
 ## Pipeline Overview
 
 - **Ingestion**: fetches public-source data and stores raw responses with metadata.

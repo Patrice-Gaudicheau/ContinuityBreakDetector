@@ -1,6 +1,7 @@
 # ContinuityBreakDetector
 
 [![CI](https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/actions/workflows/test.yml/badge.svg)](https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/actions/workflows/test.yml)
+[![Coverage](https://img.shields.io/badge/coverage-CI%20artifact-informational)](https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/actions/workflows/test.yml)
 
 ContinuityBreakDetector is a deterministic-first pipeline for finding continuity
 break candidates in long-run public time series. It combines source ingestion,
@@ -200,6 +201,7 @@ the JSON stdin/stdout shape stays consistent across backends.
 
 More detail:
 
+- [ARCHITECTURE.md](ARCHITECTURE.md)
 - [docs/ml_architecture.md](docs/ml_architecture.md)
 - [docs/worker_contract.md](docs/worker_contract.md)
 - [docs/roadmap.md](docs/roadmap.md)

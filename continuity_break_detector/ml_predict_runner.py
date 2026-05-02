@@ -5,10 +5,10 @@ import json
 import math
 import sys
 
+from continuity_break_detector.forecast_client import default_forecast_client
 from continuity_break_detector.ml_workers import (
     WorkerPredictionResult,
-    predict_chronos,
-    predict_timesfm,
+    worker_prediction_from_forecast_result,
 )
 
 
@@ -29,10 +29,14 @@ def main() -> int:
         _print_error(args.worker, "validation_error", "horizon must be a positive integer")
         return 2
 
-    if args.worker == "timesfm":
-        result = predict_timesfm(series, args.horizon, timeout_seconds=args.timeout)
-    else:
-        result = predict_chronos(series, args.horizon, timeout_seconds=args.timeout)
+    result = worker_prediction_from_forecast_result(
+        default_forecast_client().predict(
+            args.worker,
+            series,
+            args.horizon,
+            timeout_seconds=args.timeout,
+        )
+    )
     return _print_result(result)
 
 

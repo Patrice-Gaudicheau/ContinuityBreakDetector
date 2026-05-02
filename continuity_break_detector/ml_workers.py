@@ -1,10 +1,16 @@
 from __future__ import annotations
 
-import json
 import os
 import subprocess
 from dataclasses import dataclass
 from typing import Any
+
+from continuity_break_detector.forecast_client import (
+    DEFAULT_FORECAST_TIMEOUT_SECONDS,
+    ForecastResult,
+    default_forecast_client,
+    worker_service_name,
+)
 
 DEFAULT_WORKER_TIMEOUT_SECONDS = 120.0
 
@@ -63,12 +69,43 @@ def predict_timesfm(
     horizon: int,
     timeout_seconds: float = DEFAULT_WORKER_TIMEOUT_SECONDS,
 ) -> WorkerPredictionResult:
-    return _run_worker_predict(
-        worker_name="timesfm",
-        service_name="timesfm-worker",
-        series=series,
-        horizon=horizon,
-        timeout=timeout_seconds,
+    return worker_prediction_from_forecast_result(
+        default_forecast_client().predict(
+            "timesfm",
+            series,
+            horizon,
+            timeout_seconds=timeout_seconds,
+        )
+    )
+
+
+def predict_worker(
+    worker: str,
+    series: list[float],
+    horizon: int,
+    timeout_seconds: float = DEFAULT_FORECAST_TIMEOUT_SECONDS,
+) -> WorkerPredictionResult:
+    return worker_prediction_from_forecast_result(
+        default_forecast_client().predict(
+            worker,
+            series,
+            horizon,
+            timeout_seconds=timeout_seconds,
+        )
+    )
+
+
+def worker_prediction_from_forecast_result(result: ForecastResult) -> WorkerPredictionResult:
+    return WorkerPredictionResult(
+        worker_name=result.worker,
+        command=_predict_command(result.worker),
+        returncode=result.returncode,
+        stdout=result.raw_stdout,
+        stderr=result.raw_stderr,
+        succeeded=result.succeeded,
+        response=result.response,
+        forecast=result.forecast,
+        error=result.error,
     )
 
 
@@ -77,13 +114,19 @@ def predict_chronos(
     horizon: int,
     timeout_seconds: float = DEFAULT_WORKER_TIMEOUT_SECONDS,
 ) -> WorkerPredictionResult:
-    return _run_worker_predict(
-        worker_name="chronos",
-        service_name="chronos-worker",
-        series=series,
-        horizon=horizon,
-        timeout=timeout_seconds,
+    return worker_prediction_from_forecast_result(
+        default_forecast_client().predict(
+            "chronos",
+            series,
+            horizon,
+            timeout_seconds=timeout_seconds,
+        )
     )
+
+
+def _predict_command(worker: str) -> list[str]:
+    service_name = worker_service_name(worker)
+    return ["docker", "compose", "run", "--rm", "-T", service_name, "python", "predict.py"]
 
 
 def _run_worker_smoke(
@@ -140,116 +183,6 @@ def _run_worker_smoke(
         stderr=completed.stderr,
         succeeded=completed.returncode == 0,
     )
-
-
-def _run_worker_predict(
-    *,
-    worker_name: str,
-    service_name: str,
-    series: list[float],
-    horizon: int,
-    timeout: float,
-) -> WorkerPredictionResult:
-    command = ["docker", "compose", "run", "--rm", "-T", service_name, "python", "predict.py"]
-    payload = {"series": [float(value) for value in series], "horizon": int(horizon)}
-    try:
-        completed = subprocess.run(
-            command,
-            input=json.dumps(payload),
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            check=False,
-            env=os.environ.copy(),
-        )
-    except subprocess.TimeoutExpired as exc:
-        stdout = _text_or_empty(exc.stdout)
-        stderr = _text_or_empty(exc.stderr)
-        message = f"{worker_name} worker prediction timed out after {timeout:g} seconds"
-        stderr = f"{stderr}\n{message}".strip()
-        return WorkerPredictionResult(
-            worker_name=worker_name,
-            command=command,
-            returncode=124,
-            stdout=stdout,
-            stderr=stderr,
-            succeeded=False,
-            response=None,
-            forecast=[],
-            error=message,
-        )
-    except OSError as exc:
-        message = f"{worker_name} worker prediction could not start Docker Compose: {exc}"
-        return WorkerPredictionResult(
-            worker_name=worker_name,
-            command=command,
-            returncode=127,
-            stdout="",
-            stderr=message,
-            succeeded=False,
-            response=None,
-            forecast=[],
-            error=message,
-        )
-
-    response, parse_error = _parse_worker_json(completed.stdout)
-    if parse_error is not None:
-        return WorkerPredictionResult(
-            worker_name=worker_name,
-            command=command,
-            returncode=completed.returncode,
-            stdout=completed.stdout,
-            stderr=completed.stderr,
-            succeeded=False,
-            response=None,
-            forecast=[],
-            error=parse_error,
-        )
-
-    forecast = _forecast_from_response(response)
-    response_error = _error_from_response(response)
-    succeeded = completed.returncode == 0 and forecast is not None and response_error is None
-    return WorkerPredictionResult(
-        worker_name=worker_name,
-        command=command,
-        returncode=completed.returncode,
-        stdout=completed.stdout,
-        stderr=completed.stderr,
-        succeeded=succeeded,
-        response=response,
-        forecast=forecast or [],
-        error=response_error if response_error is not None else None if succeeded else "worker failed",
-    )
-
-
-def _parse_worker_json(stdout: str) -> tuple[dict[str, Any], str | None]:
-    try:
-        parsed = json.loads(stdout)
-    except json.JSONDecodeError as exc:
-        return {}, f"worker returned invalid JSON stdout: {exc.msg}"
-    if not isinstance(parsed, dict):
-        return {}, "worker returned non-object JSON stdout"
-    return parsed, None
-
-
-def _forecast_from_response(response: dict[str, Any]) -> list[float] | None:
-    forecast = response.get("forecast")
-    if not isinstance(forecast, list):
-        return None
-    try:
-        return [float(value) for value in forecast]
-    except (TypeError, ValueError):
-        return None
-
-
-def _error_from_response(response: dict[str, Any]) -> str | None:
-    error = response.get("error")
-    if isinstance(error, dict):
-        message = error.get("message")
-        if isinstance(message, str):
-            return message
-        return str(error)
-    return None
 
 
 def _text_or_empty(value: str | bytes | None) -> str:

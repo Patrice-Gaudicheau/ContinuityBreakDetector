@@ -148,6 +148,12 @@ python -m continuity_break_detector.main ml-predict --worker chronos --series "1
 The first prediction run may download model weights at runtime. The core Python
 environment still does not install or import ML worker dependencies.
 
+Internally, ML predictions go through `ForecastClient`. The first implementation,
+`DockerForecastClient`, owns the Docker Compose JSON stdin/stdout path used by
+`ml-predict`, `predict-series`, and `analyze-series`. Future daemon, local
+subprocess, or remote API backends should plug in there instead of adding new
+worker subprocess logic to pipeline modules.
+
 Docker Compose mounts a shared named volume, `hf_cache`, at
 `/root/.cache/huggingface` in both ML worker containers. The first full smoke or
 prediction run downloads model weights into that volume at runtime; later runs

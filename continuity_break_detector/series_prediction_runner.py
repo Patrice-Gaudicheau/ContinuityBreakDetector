@@ -34,8 +34,8 @@ def main() -> int:
         print(json.dumps(build_error_response(exc.error_type, exc.message), separators=(",", ":")))
         return 2
 
-    if prediction.stderr.strip():
-        print(prediction.stderr.strip(), file=sys.stderr)
+    if prediction.raw_stderr.strip():
+        print(prediction.raw_stderr.strip(), file=sys.stderr)
     if not prediction.succeeded:
         message = prediction.error or "worker prediction failed"
         print(json.dumps(build_error_response("worker_error", message), separators=(",", ":")))

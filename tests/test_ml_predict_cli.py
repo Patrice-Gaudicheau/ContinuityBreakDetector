@@ -3,29 +3,30 @@ from __future__ import annotations
 import json
 
 from continuity_break_detector import ml_predict_runner
-from continuity_break_detector.ml_workers import WorkerPredictionResult
+from continuity_break_detector.forecast_client import ForecastResult
 
 
 def test_ml_predict_cli_prints_worker_json(monkeypatch, capsys) -> None:
-    def fake_predict(series, horizon, timeout_seconds=120.0):
-        return WorkerPredictionResult(
-            worker_name="timesfm",
-            command=[],
-            returncode=0,
-            stdout='{"worker":"timesfm","forecast":[4.0]}',
-            stderr="",
-            succeeded=True,
-            response={
-                "worker": "timesfm",
-                "model_id": "model",
-                "horizon": horizon,
-                "forecast": [series[-1]],
-            },
-            forecast=[series[-1]],
-            error=None,
-        )
+    class FakeClient:
+        def predict(self, worker, series, horizon, timeout_seconds=120.0):
+            return ForecastResult(
+                worker=worker,
+                model_id="model",
+                horizon=horizon,
+                forecast=[series[-1]],
+                raw_stdout='{"worker":"timesfm","model_id":"model","horizon":1,"forecast":[4.0]}',
+                raw_stderr="",
+                returncode=0,
+                succeeded=True,
+                response={
+                    "worker": "timesfm",
+                    "model_id": "model",
+                    "horizon": horizon,
+                    "forecast": [series[-1]],
+                },
+            )
 
-    monkeypatch.setattr(ml_predict_runner, "predict_timesfm", fake_predict)
+    monkeypatch.setattr(ml_predict_runner, "default_forecast_client", lambda: FakeClient())
     monkeypatch.setattr(
         "sys.argv",
         ["cbd", "--worker", "timesfm", "--series", "1,2,4", "--horizon", "1"],

@@ -1,8 +1,10 @@
-# Detecting Global Turning Points in Human Development Data
+# Detecting Cross-Domain Continuity Breaks in Global Development Data
 
 ## Can we detect unexplained breaks in global development?
 
 Over the past two centuries, humanity has changed dramatically. Population has grown, economies have expanded, and health outcomes have improved across much of the world. These long-term trends often appear smooth when viewed from a distance, but history also contains moments when the trajectory changes abruptly.
+
+Importantly, the consistency of results across both simple models and more advanced forecasting approaches suggests that the observed anomalies are not artifacts of model choice.
 
 This study asks a narrow question:
 
@@ -182,3 +184,5 @@ The answer, based on the current evidence, is cautious:
 The most robust detected breaks correspond to 2008 and 2020, both of which are already well understood. Other striking signals are better explained as data artifacts or unresolved candidates requiring further validation.
 
 The result is not a claim that unexplained breaks are impossible. It is a narrower finding: in these widely used global indicators, the strongest surviving signals are known events, not unexplained discontinuities.
+
+This consistency across multiple modeling approaches and filtering stages strengthens confidence that the observed result is not driven by a specific method or dataset.

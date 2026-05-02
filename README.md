@@ -2,7 +2,9 @@
 
 [![CI](https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/actions/workflows/test.yml/badge.svg)](https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/actions/workflows/test.yml)
 
-ContinuityBreakDetector is a deterministic-first pipeline for finding candidate continuity breaks in long-term public time-series data. It ingests source data, normalizes it into yearly series, computes transparent statistical signals, runs historical backtests, ranks cross-domain anomalies, audits likely causes, and filters data artifacts before any optional ML or LLM interpretation is used.
+ContinuityBreakDetector is a deterministic-first pipeline to detect structural breaks in global development data.
+
+It is designed to distinguish real-world shocks from data artifacts using reproducible, auditable methods.
 
 This repository is primarily an engineering project. The article provides context and results, not the implementation.
 

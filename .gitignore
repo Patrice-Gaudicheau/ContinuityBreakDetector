@@ -16,6 +16,7 @@ venv/
 data/raw/
 data/processed/
 studies/backtests/
+studies/demo_study/
 publication/paper/
 publication/article/
 publication/twitter/

@@ -1,4 +1,4 @@
-.PHONY: test lint lint-basic format-check typecheck-basic quality clean-generated run-demo
+.PHONY: test lint lint-basic format-check typecheck-basic quality clean-generated run-demo demo-study
 
 test:
 	python -m py_compile $$(find . -name "*.py")
@@ -26,7 +26,7 @@ quality:
 	pytest -q
 
 clean-generated:
-	rm -rf data/raw data/processed studies/backtests publication/paper
+	rm -rf data/raw data/processed studies/backtests studies/demo_study publication/paper
 	rm -f *.sqlite *.db
 	find . -type d -name "__pycache__" -prune -exec rm -rf {} +
 	find . -type d -name ".pytest_cache" -prune -exec rm -rf {} +
@@ -34,3 +34,6 @@ clean-generated:
 run-demo:
 	@echo "Synthetic sample outputs are available under examples/:"
 	@ls examples
+
+demo-study:
+	python main.py demo_study

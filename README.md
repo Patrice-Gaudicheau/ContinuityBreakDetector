@@ -53,6 +53,18 @@ make run-demo
 `make run-demo` uses only committed synthetic examples and does not require
 network access, local model paths, Lemonade, TimesFM, or Chronos.
 
+## Quick Demo
+
+```bash
+make demo-study
+```
+
+This runs a small reproducible study from embedded fixture data in seconds. It
+does not use network access, TimesFM, Chronos, or Lemonade. The command writes a
+demo study folder under `studies/demo_study/` with normalized parquet files,
+statistics, deterministic backtest errors, ranked candidates, candidate audit,
+and data artifact audit outputs.
+
 ## Feature Matrix
 
 | Capability | Status | Notes |

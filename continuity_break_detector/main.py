@@ -9,6 +9,7 @@ from continuity_break_detector.backtesting.artifact_runner import main as artifa
 from continuity_break_detector.backtesting.audit_runner import main as audit_main
 from continuity_break_detector.backtesting.ranking_runner import main as ranking_main
 from continuity_break_detector.backtesting.runner import main as backtesting_main
+from continuity_break_detector.demo import main as demo_study_main
 from continuity_break_detector.forecasting.runner import (
     backtest_advanced_main,
     list_forecasters_main,
@@ -34,6 +35,7 @@ COMMANDS: dict[str, Callable[[], int]] = {
     "lemonade_debug": lemonade_debug_main,
     "list_forecasters": list_forecasters_main,
     "draft_paper": publication_main,
+    "demo_study": demo_study_main,
 }
 
 
@@ -49,4 +51,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

@@ -116,29 +116,41 @@ Core design choices:
 7. **Optional paper drafting**: compact study summaries and tables can be passed
    to a local or CLI model to draft research prose.
 
-## Supported Data Sources
+## Data Sources
 
-Implemented connectors:
+The system is designed to be extensible across multiple public data providers.
 
-- World Bank WDI
-- OpenAlex
-- arXiv
-- Crossref
-- Our World in Data grapher CSV and metadata endpoints
+### Currently Supported
 
-Documented but not implemented yet:
+The following sources are fully implemented and tested:
+
+- World Bank datasets (global development indicators)
+- Our World in Data (long-term global indicators)
+- OpenAlex (scientific publication metadata)
+- arXiv (scientific preprints)
+- Crossref (scholarly metadata)
+
+### Extensibility
+
+The architecture supports additional sources through the same ingestion and
+normalization pipeline. Examples of compatible sources include:
 
 - OECD
 - Eurostat
 - IEA
-- BP / Energy Institute
-- Maddison
-- GitHub public activity
-- Dimensions
+- Energy Institute / BP datasets
+- Maddison historical datasets
 - UN World Population Prospects
+- GitHub public activity data
+- Dimensions
 
-See [docs/data_sources.md](docs/data_sources.md) and
-[docs/sources_connection_detail.md](docs/sources_connection_detail.md).
+These are not included in the current implementation and are listed only as
+examples of supported integration patterns.
+
+See:
+
+- [docs/data_sources.md](docs/data_sources.md)
+- [docs/sources_connection_detail.md](docs/sources_connection_detail.md)
 
 ## Optional Advanced Forecasters
 

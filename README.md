@@ -112,6 +112,22 @@ CBD_RUN_ML_MODEL_SMOKE=1 docker compose run --rm chronos-worker python smoke_tes
 
 The ML worker containers are optional and experimental. They prepare isolated CPU Python environments and do not download model weights during build.
 
+The core CLI can invoke the same isolated worker smoke tests without installing ML
+dependencies in the core environment:
+
+```bash
+python -m continuity_break_detector.main ml-smoke
+python -m continuity_break_detector.main ml-smoke --worker timesfm
+python -m continuity_break_detector.main ml-smoke --worker chronos
+```
+
+These commands run the lightweight import and CPU tensor smoke tests by default.
+Full model smoke tests remain opt-in and may download model weights at runtime:
+
+```bash
+python -m continuity_break_detector.main ml-smoke --full
+```
+
 ## Pipeline Overview
 
 - **Ingestion**: fetches public-source data and stores raw responses with metadata.

@@ -8,6 +8,25 @@ dependencies = [
   "pandas>=2.2,<4",
   "pyarrow>=15,<25",
 ]
+authors = [
+  { name = "Patrice Gaudicheau" }
+]
+description = "Deterministic analysis pipeline for identifying structural breaks in public time series."
+readme = "README.md"
+license = { text = "MIT" }
+keywords = ["time-series", "structural-break", "anomaly-detection", "backtesting", "forecasting"]
+classifiers = [
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Development Status :: 4 - Beta",
+]
+
+[project.urls]
+Homepage = "https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector"
+Repository = "https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector"
+Issues = "https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/issues"
 
 [project.scripts]
 cbd = "continuity_break_detector.main:main"

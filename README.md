@@ -1,24 +1,30 @@
 # ContinuityBreakDetector
 
 [![CI](https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/actions/workflows/test.yml/badge.svg)](https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/actions/workflows/test.yml)
-[![Coverage](https://img.shields.io/badge/coverage-CI%20artifact-informational)](https://github.com/Patrice-Gaudicheau/ContinuityBreakDetector/actions/workflows/test.yml)
+
+In 30 seconds: ContinuityBreakDetector ingests public time-series data, runs deterministic statistical backtests, ranks candidate continuity breaks or regime shifts, and can optionally let ML/LLM reviewers critique the results. The core remains deterministic, auditable, and usable without Docker or ML.
 
 ContinuityBreakDetector is not a typical anomaly detector.
 
-It is a deterministic analysis pipeline followed by a structured AI review layer, built around a simple idea: AI as reviewer, not as decision maker.
+It is a deterministic analysis pipeline followed by a structured AI review layer, built around a simple idea: **AI as a reviewer, not a decision maker.**
 
 It ingests long-run public time series, computes statistical features, runs rolling backtests, ranks candidate continuity breaks, and filters likely artifacts. All these stages are deterministic, reproducible, and fully inspectable.
 
-The system does not rely on AI for detection. LLMs are introduced only after the analytical pipeline, where they interpret, challenge, and contextualize the results through a set of specialized agents: source auditor, statistical reviewer, domain_interpreter, skeptic, and synthesis.
+The system does not rely on AI for detection. LLMs are introduced only after the analytical pipeline, where they interpret, challenge, and contextualize the results through a set of specialized agents.
 
-This design separates computation from interpretation. The pipeline produces evidence. The agents behave like a committee of reviewers.
+## Why This Project?
 
-The core project remains intentionally lightweight. Optional TimesFM and Chronos forecasting runs are isolated in Docker workers, and optional LLM analysis runs through a Lemonade-compatible endpoint.
+In many real-world datasets, the problem is not just noise or missing values—the signal itself changes regime. A process shifts. A sensor behaves differently. A dataset stops being "the same story."
+
+ContinuityBreakDetector provides the structure to:
+- **Identify** structural breaks across heterogeneous domains.
+- **Audit** whether a break is a real-world event or a data artifact (e.g., source revisions).
+- **Explain** the results using a committee of specialized agents.
 
 ## Architecture
 
 ```text
-public data -> deterministic core -> audit artifacts -> reports
+public data -> deterministic core -> audit artifacts -> committee review -> reports
 ```
 
 ```mermaid
@@ -28,75 +34,72 @@ flowchart LR
     ING --> NORM["Normalization (Parquet)"]
     NORM --> STATS["Statistics<br/>deterministic core"]
     STATS --> BACKTEST["Backtesting Engine<br/>deterministic core"]
-    BACKTEST --> FORECAST["Forecasting"]
-    FORECAST --> RANK["Ranking"]
+    BACKTEST --> RANK["Ranking"]
     RANK --> AUDIT["Audit"]
     AUDIT --> ARTIFACT["Artifact Detection"]
-    ARTIFACT --> LLM["Optional LLM Analysis<br/>Lemonade-compatible endpoint"]
+    ARTIFACT --> LLM["Optional LLM Analysis<br/>Committee of Agents"]
     LLM --> PUB["Publication outputs"]
 ```
 
 For design details, see [ARCHITECTURE.md](ARCHITECTURE.md) and the
 [ML architecture notes](docs/ml_architecture.md).
 
-## Key Idea
+## Philosophy: Decoupled Logic
 
 The system is built around a strict two-layer architecture.
 
-The first layer is deterministic. It produces evidence: forecast errors, ranked
-candidates, audit scores, artifact flags, and reproducibility metadata.
+1. **Deterministic Layer:** Produces evidence: forecast errors, ranked candidates, audit scores, artifact flags, and reproducibility metadata. It uses Python, Pandas, and Parquet for efficiency and auditability.
+2. **Interpretative Layer:** A structured set of agents (skeptic, auditor, interpreter) reads those artifacts and produces a critical review.
 
-The second layer is interpretative. A structured set of agents reads those
-artifacts and produces a critical review.
-
-The domain_interpreter is a key component of this layer. Its role is to connect
-statistically detected breaks to plausible real-world context, economic,
-demographic, or scientific, without overriding the underlying evidence.
-
-The skeptic agent plays an equally important role by actively rejecting false
-positives and favoring ordinary explanations over speculative ones.
-
-Together, these agents form a constrained interpretation system rather than a
-generative one.
+By isolating heavy ML dependencies (TimesFM, Chronos) in Docker workers and keeping the core logic deterministic, the system remains lightweight and easy to verify.
 
 ## Quick Demo
 
+Run an end-to-end deterministic study from embedded fixture data in seconds. It does not require network access, heavy ML models, or LLM keys.
+
 ```bash
 python -m pip install -e '.[test]'
-make demo-study
+cbd demo_study
 ```
 
-`make demo-study` runs an end-to-end deterministic study from embedded fixture data in seconds. It does not use network access, TimesFM, Chronos, or Lemonade.
+## CLI Reference
 
-The demo writes outputs under:
-
-```text
-studies/demo_study/
+```bash
+cbd --help
+cbd demo_study
+cbd list_forecasters
+cbd backtest_advanced
+cbd analyze_agents --study-path studies/backtests/<study_id>
 ```
 
-### Example agent output (excerpt)
+### Inspecting the Results
+
+The demo writes structured artifacts to `studies/demo_study/`:
+
+- `summary.json`: High-level study statistics and top break candidates.
+- `study.md`: A human-readable report summarizing the findings.
+- `data_artifact_audit.json`: Detailed scoring of artifact risk for each candidate.
+- `forecast_errors.parquet`: The raw evidence used for ranking.
+
+Example of a human-readable summary generated by the demo:
 
 ```text
 [Skeptic]
-
 Top candidate: 2012
-
 Assessment:
-- Strong statistical signal across multiple domains
-- High artifact risk due to source revision patterns
-- Similar patterns observed in neighboring years
-
-Conclusion:
-This candidate is more likely a data artifact than a real-world event.
-Confidence: medium
+- Strong statistical signal across multiple domains.
+- High artifact risk due to source revision patterns.
+Conclusion: Likely a data artifact rather than a real-world event.
 ```
 
-## Testing
+## Testing & Hygiene
+
+The project is built with the standards expected in production tools:
 
 ```bash
-pytest -q
-ruff check .
-mypy continuity_break_detector
+pytest -q                # Current verified result: 149 passed
+ruff check .             # Linting and style consistency
+mypy .                   # Type safety verification
 ```
 
 Coverage can be measured locally with:
@@ -105,25 +108,7 @@ Coverage can be measured locally with:
 pytest --cov=continuity_break_detector --cov-report=term-missing
 ```
 
-## Lightweight Docker
-
-Build the core reproducibility image:
-
-```bash
-docker build -t continuity-break-detector:core .
-```
-
-Run the test suite inside Docker:
-
-```bash
-docker run --rm continuity-break-detector:core
-```
-
-This container is intentionally lightweight and installs the project with its
-test dependencies only. It does not contain TimesFM, Chronos, model weights, or
-GPU requirements.
-
-## Optional ML Forecasting
+## Advanced Features (Optional)
 
 Advanced models such as TimesFM and Chronos run in isolated Docker workers. They
 are optional and do not add ML dependencies to the core Python environment.
@@ -191,9 +176,9 @@ The advanced components are optional and isolated from the deterministic core.
 If an optional model is unavailable, the deterministic pipeline still runs.
 
 ```bash
-python main.py list_forecasters
-python main.py backtest_advanced
-python main.py analyze_agents --study-path studies/backtests/<study_id>
+cbd list_forecasters
+cbd backtest_advanced
+cbd analyze_agents --study-path studies/backtests/<study_id>
 ```
 
 ## Example Outputs

@@ -28,36 +28,50 @@ from continuity_break_detector.utils.logging import configure_logging, get_logge
 
 LOGGER = get_logger(__name__)
 
-COMMANDS: dict[str, Callable[[], int]] = {
-    "ingest": ingestion_main,
-    "normalize": normalization_main,
-    "compute_statistics": statistics_main,
-    "backtest": backtesting_main,
-    "backtest_advanced": backtest_advanced_main,
-    "rank_breaks": ranking_main,
-    "audit_candidates": audit_main,
-    "detect_artifacts": artifact_main,
-    "analyze_agents": agents_main,
-    "lemonade_debug": lemonade_debug_main,
-    "list_forecasters": list_forecasters_main,
-    "draft_paper": publication_main,
-    "demo_study": demo_study_main,
-    "ml-smoke": ml_worker_main,
-    "ml-predict": ml_predict_main,
-    "ml-daemon-predict": ml_daemon_predict_main,
-    "predict-series": series_prediction_main,
-    "batch-predict": batch_prediction_main,
-    "analyze-series": ml_break_analysis_main,
+COMMANDS: dict[str, tuple[Callable[[], int], str]] = {
+    "ingest": (ingestion_main, "Fetch public-source data from supported APIs"),
+    "normalize": (normalization_main, "Convert raw source data into a common yearly Parquet schema"),
+    "compute_statistics": (statistics_main, "Compute statistical features (growth, z-scores, etc.)"),
+    "backtest": (backtesting_main, "Run deterministic historical backtests to find anomalies"),
+    "backtest_advanced": (backtest_advanced_main, "Run backtests using advanced ML models (requires Docker)"),
+    "rank_breaks": (ranking_main, "Rank candidate break years across multiple metrics"),
+    "audit_candidates": (audit_main, "Audit candidates for robustness and model agreement"),
+    "detect_artifacts": (artifact_main, "Identify likely data artifacts and source-revision noise"),
+    "analyze_agents": (agents_main, "Run AI agents to interpret and critique the results"),
+    "lemonade_debug": (lemonade_debug_main, "Test the connection to a Lemonade-compatible LLM endpoint"),
+    "list_forecasters": (list_forecasters_main, "List available advanced forecasting models"),
+    "draft_paper": (publication_main, "Generate a draft article or report from the study artifacts"),
+    "demo_study": (demo_study_main, "Run a complete end-to-end study using embedded demo data"),
+    "ml-smoke": (ml_worker_main, "Run a smoke test for the ML worker infrastructure"),
+    "ml-predict": (ml_predict_main, "Run a single prediction using an ML worker"),
+    "ml-daemon-predict": (ml_daemon_predict_main, "Run a prediction using a warm daemon ML worker"),
+    "predict-series": (series_prediction_main, "Run a prediction for a single series (CLI helper)"),
+    "batch-predict": (batch_prediction_main, "Run batch predictions for multiple series"),
+    "analyze-series": (ml_break_analysis_main, "Run a break analysis for a single series"),
 }
+
+
+def print_usage() -> None:
+    print("\nUsage: cbd <command> [options]\n")
+    print("Commands:")
+    for cmd, (_, desc) in COMMANDS.items():
+        print(f"  {cmd:<20} {desc}")
+    print("\nUse 'cbd <command> --help' for details on a specific command.\n")
 
 
 def main() -> int:
     configure_logging()
+    if len(sys.argv) == 2 and sys.argv[1] in {"-h", "--help"}:
+        print_usage()
+        return 0
+
     if len(sys.argv) >= 2 and sys.argv[1] in COMMANDS:
         command = sys.argv[1]
+        handler, _ = COMMANDS[command]
         sys.argv = [sys.argv[0], *sys.argv[2:]]
-        return COMMANDS[command]()
-    LOGGER.error("Usage: cbd {%s}", ",".join(COMMANDS))
+        return handler()
+
+    print_usage()
     return 2
 
 
